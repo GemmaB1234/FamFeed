@@ -6,6 +6,6 @@
     "node": ">=18.x"
   },
   "dependencies": {
-    "@upstash/redis": "^1.38.0"
+    "ioredis": "^5.11.1"
   }
 }

@@ -1,5 +1,10 @@
-const { Redis } = require('@upstash/redis');
-const kv = Redis.fromEnv();
+const Redis = require('ioredis');
+
+if (!process.env.REDIS_URL) {
+  console.error('Fam Feed: REDIS_URL environment variable is missing.');
+}
+// Reused across warm serverless invocations instead of reconnecting every call.
+const kv = global.__famFeedRedis || (global.__famFeedRedis = new Redis(process.env.REDIS_URL));
 
 // Returns the full app state in one call:
 // {
