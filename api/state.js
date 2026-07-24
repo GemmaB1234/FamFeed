@@ -2,30 +2,42 @@ const { Redis } = require('@upstash/redis');
 const kv = Redis.fromEnv();
 
 // Returns the full app state in one call:
-// { members: {id: name}, meals: {date: {name, sourceType, sourceNote, votes:{memberId:choice}}}, shoppingList: {id: item} }
+// {
+//   members: {id: name},
+//   ideas: {id: {name, sourceType, sourceNote, votes:{memberId:choice}}},   // "Can we have?" pool
+//   meals: {date: {ideaId, name, sourceType, sourceNote}},                  // assigned plan
+//   shoppingList: {id: item}
+// }
 module.exports = async (req, res) => {
   try {
-    const [members, mealsRaw, votesRaw, shoppingRaw] = await Promise.all([
+    const [members, ideasRaw, ideaVotesRaw, mealsRaw, shoppingRaw] = await Promise.all([
       kv.hgetall('members'),
+      kv.hgetall('ideas'),
+      kv.hgetall('ideaVotes'),
       kv.hgetall('meals'),
-      kv.hgetall('votes'),
       kv.hgetall('shoppingList'),
     ]);
+
+    const ideas = {};
+    Object.keys(ideasRaw || {}).forEach((id) => {
+      ideas[id] = safeParse(ideasRaw[id], {});
+      if (!ideas[id].votes) ideas[id].votes = {};
+    });
+
+    // ideaVotes hash fields look like "ideaId__memberId" -> "yum"
+    Object.keys(ideaVotesRaw || {}).forEach((key) => {
+      const idx = key.indexOf('__');
+      if (idx === -1) return;
+      const ideaId = key.slice(0, idx);
+      const memberId = key.slice(idx + 2);
+      if (!ideas[ideaId]) ideas[ideaId] = { name: '', sourceType: 'other', sourceNote: '', votes: {} };
+      if (!ideas[ideaId].votes) ideas[ideaId].votes = {};
+      ideas[ideaId].votes[memberId] = ideaVotesRaw[key];
+    });
 
     const meals = {};
     Object.keys(mealsRaw || {}).forEach((date) => {
       meals[date] = safeParse(mealsRaw[date], {});
-    });
-
-    // votes hash fields look like "2026-07-24__abc123" -> "yum"
-    Object.keys(votesRaw || {}).forEach((key) => {
-      const idx = key.indexOf('__');
-      if (idx === -1) return;
-      const date = key.slice(0, idx);
-      const memberId = key.slice(idx + 2);
-      if (!meals[date]) meals[date] = {};
-      if (!meals[date].votes) meals[date].votes = {};
-      meals[date].votes[memberId] = votesRaw[key];
     });
 
     const shoppingList = {};
@@ -36,6 +48,7 @@ module.exports = async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).json({
       members: members || {},
+      ideas,
       meals,
       shoppingList,
     });

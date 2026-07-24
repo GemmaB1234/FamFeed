@@ -171,6 +171,11 @@
   .vote-btn.selected.no{ background:var(--no); border-color:var(--no); }
   .vote-tally{ display:flex; gap:10px; margin-top:8px; font-size:0.8rem; color:var(--muted); }
   .no-meal{ color:var(--muted); font-style:italic; }
+  .vote-btn.del-idea{ background:none; font-size:1rem; opacity:0.5; min-width:auto; padding:10px 8px; }
+  .vote-btn.del-idea:hover{ opacity:1; }
+  .assign-select{
+    width:100%; padding:9px 12px; border-radius:10px; border:1px solid #EEE3F5; font-size:0.92rem;
+  }
 
   /* Planner grid */
   .day-grid{ display:grid; grid-template-columns:1fr; gap:12px; }
@@ -257,7 +262,7 @@
 </div>
 
 <nav class="tabs">
-  <button data-view="vote" class="active">🗳️ Vote</button>
+  <button data-view="vote" class="active">🙋 Can We Have?</button>
   <button data-view="planner">📅 Planner</button>
   <button data-view="shopping">🛒 Shopping List</button>
   <button data-view="dashboard">📊 Dashboard</button>
@@ -267,8 +272,27 @@
 <main>
   <div id="whoBar"></div>
 
-  <!-- VOTE VIEW -->
+  <!-- VOTE VIEW (a.k.a. "Can We Have?") -->
   <section id="view-vote" class="view active">
+    <div class="card">
+      <h2>Can we have...?</h2>
+      <div class="sub">Suggest anything you fancy — everyone votes below, and the favourites get slotted into the Planner.</div>
+      <div class="add-item-form">
+        <input type="text" id="ideaName" placeholder="e.g. Tray-bake fajitas">
+        <select id="ideaSourceType">
+          <option value="cookbook">📖 Cookbook</option>
+          <option value="tiktok">📱 TikTok</option>
+          <option value="instagram">📸 Instagram</option>
+          <option value="facebook">👍 Facebook</option>
+          <option value="pinterest">📌 Pinterest</option>
+          <option value="website">🌐 Website/Blog</option>
+          <option value="family">👵 Family recipe</option>
+          <option value="other" selected>📝 Other</option>
+        </select>
+        <input type="text" id="ideaSourceNote" placeholder="link / note (optional)">
+        <button class="btn" id="addIdeaBtn">Suggest it</button>
+      </div>
+    </div>
     <div id="voteList"></div>
   </section>
 
@@ -276,12 +300,12 @@
   <section id="view-planner" class="view">
     <div class="card">
       <h2>Plan this fortnight's dinners</h2>
-      <div class="sub">Add what's for dinner and where the recipe lives — cookbook, TikTok, that group chat screenshot, wherever.</div>
+      <div class="sub">Pick from the suggestions in 🙋 Can We Have? for each night — best-voted ones are listed first.</div>
       <div class="day-grid" id="plannerGrid"></div>
     </div>
     <div class="card">
       <h2>Share with the family</h2>
-      <div class="sub">Send this exact page link to everyone — they'll land straight on the Vote tab.</div>
+      <div class="sub">Send this exact page link to everyone — they'll land straight on the Can We Have? tab.</div>
       <div class="link-box">
         <code id="shareLink"></code>
         <button class="btn" id="copyLinkBtn">Copy link</button>
@@ -355,9 +379,21 @@
   // ---------- Tiny in-memory store + polling sync via /api ----------
   var state = {
     members: {},       // id -> name
-    meals: {},          // dateStr -> {name, sourceType, sourceNote, votes:{memberId:choice}}
+    ideas: {},          // id -> {name, sourceType, sourceNote, votes:{memberId:choice}}  ("Can we have?" pool)
+    meals: {},          // dateStr -> {ideaId, name, sourceType, sourceNote}  (assigned plan snapshot)
     shoppingList: {}    // id -> {name, qty, category, checked}
   };
+
+  function tallyOf(idea){
+    var votes = (idea && idea.votes) || {};
+    var t = {yum:0, meh:0, no:0};
+    Object.keys(votes).forEach(function(v){ if(t[votes[v]] !== undefined) t[votes[v]]++; });
+    return t;
+  }
+  function scoreOfIdea(idea){
+    var t = tallyOf(idea);
+    return t.yum - t.no;
+  }
 
   function uid(){ return Math.random().toString(36).slice(2,10); }
 
@@ -414,6 +450,7 @@
       .then(function(r){ return r.json(); })
       .then(function(data){
         state.members = data.members || {};
+        state.ideas = data.ideas || {};
         state.meals = data.meals || {};
         state.shoppingList = data.shoppingList || {};
         renderAll();
@@ -441,14 +478,15 @@
     state.members[m1] = "Mum";
     state.members[m2] = "Dad";
     state.members[m3] = "Alfie (14)";
-    var d0 = DATES[0], d1 = DATES[1];
-    state.meals[d0] = {name:"Tray-bake fajitas", sourceType:"tiktok", sourceNote:"", votes:{}};
-    state.meals[d0].votes[m1]='yum'; state.meals[d0].votes[m2]='yum'; state.meals[d0].votes[m3]='no';
-    state.meals[d1] = {name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card", votes:{}};
-    state.meals[d1].votes[m1]='yum'; state.meals[d1].votes[m2]='yum'; state.meals[d1].votes[m3]='yum';
-    var i1=uid(), i2=uid();
-    state.shoppingList[i1] = {name:"chicken thighs", qty:"1kg", category:"Meat & Fish", checked:false};
-    state.shoppingList[i2] = {name:"peppers", qty:"4", category:"Produce", checked:false};
+    var i1 = uid(), i2 = uid();
+    state.ideas[i1] = {name:"Tray-bake fajitas", sourceType:"tiktok", sourceNote:"", votes:{}};
+    state.ideas[i1].votes[m1]='yum'; state.ideas[i1].votes[m2]='yum'; state.ideas[i1].votes[m3]='no';
+    state.ideas[i2] = {name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card", votes:{}};
+    state.ideas[i2].votes[m1]='yum'; state.ideas[i2].votes[m2]='yum'; state.ideas[i2].votes[m3]='yum';
+    state.meals[DATES[1]] = {ideaId:i2, name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card"};
+    var si1=uid(), si2=uid();
+    state.shoppingList[si1] = {name:"chicken thighs", qty:"1kg", category:"Meat & Fish", checked:false};
+    state.shoppingList[si2] = {name:"peppers", qty:"4", category:"Produce", checked:false};
   }
 
   function addMember(id, name){
@@ -459,20 +497,32 @@
     delete state.members[id];
     return sendAction({type:'removeMember', id:id});
   }
-  function setMealField(dateStr, field, value){
-    if(!state.meals[dateStr]) state.meals[dateStr] = {name:'', sourceType:'other', sourceNote:'', votes:{}};
-    state.meals[dateStr][field] = value;
-    return sendAction({type:'setMealField', date:dateStr, field:field, value:value});
+  function addIdea(id, idea){
+    state.ideas[id] = Object.assign({votes:{}}, idea);
+    return sendAction({type:'addIdea', id:id, idea:idea});
   }
-  function castVote(dateStr, memberId, choice){
-    if(!state.meals[dateStr]) state.meals[dateStr] = {name:'', sourceType:'other', sourceNote:'', votes:{}};
-    if(!state.meals[dateStr].votes) state.meals[dateStr].votes = {};
-    if(state.meals[dateStr].votes[memberId] === choice){
-      delete state.meals[dateStr].votes[memberId];
+  function removeIdea(id){
+    delete state.ideas[id];
+    return sendAction({type:'removeIdea', id:id});
+  }
+  function voteIdea(ideaId, memberId, choice){
+    if(!state.ideas[ideaId]) state.ideas[ideaId] = {name:'', sourceType:'other', sourceNote:'', votes:{}};
+    if(!state.ideas[ideaId].votes) state.ideas[ideaId].votes = {};
+    if(state.ideas[ideaId].votes[memberId] === choice){
+      delete state.ideas[ideaId].votes[memberId];
     } else {
-      state.meals[dateStr].votes[memberId] = choice;
+      state.ideas[ideaId].votes[memberId] = choice;
     }
-    return sendAction({type:'vote', date:dateStr, memberId:memberId, choice:choice});
+    return sendAction({type:'voteIdea', ideaId:ideaId, memberId:memberId, choice:choice});
+  }
+  function assignMeal(dateStr, ideaId){
+    if(!ideaId){
+      delete state.meals[dateStr];
+      return sendAction({type:'clearMeal', date:dateStr});
+    }
+    var idea = state.ideas[ideaId] || {};
+    state.meals[dateStr] = {ideaId:ideaId, name:idea.name||'', sourceType:idea.sourceType||'other', sourceNote:idea.sourceNote||''};
+    return sendAction({type:'assignMeal', date:dateStr, ideaId:ideaId});
   }
   function addShoppingItem(id, item){
     state.shoppingList[id] = item;
@@ -533,48 +583,63 @@
     });
   }
 
-  // ---------- Render: Vote ----------
+  // ---------- Render: Vote ("Can We Have?") ----------
   function renderVote(){
     var el = document.getElementById('voteList');
+    if(isFocusWithin(document.querySelector('#view-vote .add-item-form'))) return;
     var me = getMe();
-    var html = DATES.map(function(dateStr){
-      var meal = state.meals[dateStr];
-      if(!meal || !meal.name){
-        return '<div class="card"><div class="meal-day">'+dayLabel(dateStr)+'</div><div class="no-meal">Nothing planned yet</div></div>';
-      }
-      var votes = meal.votes || {};
-      var tally = {yum:0, meh:0, no:0};
-      Object.keys(votes).forEach(function(vid){ if(tally[votes[vid]] !== undefined) tally[votes[vid]]++; });
-      var myVote = me ? votes[me] : null;
+    var ids = Object.keys(state.ideas);
+    if(ids.length === 0){
+      el.innerHTML = '<div class="card empty-hint">No suggestions yet — add one above!</div>';
+      return;
+    }
+    ids.sort(function(a,b){ return scoreOfIdea(state.ideas[b]) - scoreOfIdea(state.ideas[a]); });
+
+    var html = ids.map(function(id){
+      var idea = state.ideas[id];
+      var tally = tallyOf(idea);
+      var myVote = me ? (idea.votes || {})[me] : null;
 
       var buttons = VOTE_OPTIONS.map(function(opt){
         var sel = myVote === opt.key ? ' selected '+opt.key : '';
-        return '<button class="vote-btn'+sel+'" data-date="'+dateStr+'" data-choice="'+opt.key+'" '+(me?'':'disabled')+'>'+opt.emoji+'</button>';
+        return '<button class="vote-btn'+sel+'" data-id="'+id+'" data-choice="'+opt.key+'" '+(me?'':'disabled')+'>'+opt.emoji+'</button>';
       }).join('');
 
-      var sourceHtml = '<span class="meal-source">'+sourceLabel(meal.sourceType)+
-        (meal.sourceNote ? ' — '+escapeHtml(meal.sourceNote) : '')+'</span>';
+      var sourceHtml = '<span class="meal-source">'+sourceLabel(idea.sourceType)+
+        (idea.sourceNote ? ' — '+escapeHtml(idea.sourceNote) : '')+'</span>';
 
       return '<div class="card meal-vote-card">' +
         '<div class="meal-info">' +
-          '<div class="meal-day">'+dayLabel(dateStr)+'</div>' +
-          '<div class="meal-name">'+escapeHtml(meal.name)+'</div>' +
+          '<div class="meal-name">'+escapeHtml(idea.name)+'</div>' +
           sourceHtml +
           '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>' +
         '</div>' +
-        '<div class="vote-buttons">'+buttons+'</div>' +
+        '<div class="vote-buttons">'+buttons+
+          '<button class="vote-btn del-idea" data-del="'+id+'" title="Remove suggestion">🗑️</button>' +
+        '</div>' +
       '</div>';
     }).join('');
     el.innerHTML = html;
 
-    el.querySelectorAll('.vote-btn').forEach(function(btn){
+    el.querySelectorAll('.vote-btn[data-id]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var me2 = getMe();
         if(!me2) return;
-        var dateStr = btn.getAttribute('data-date');
+        var id = btn.getAttribute('data-id');
         var choice = btn.getAttribute('data-choice');
-        castVote(dateStr, me2, choice);
+        voteIdea(id, me2, choice);
         renderVote();
+        renderPlanner();
+        renderDashboard();
+      });
+    });
+    el.querySelectorAll('[data-del]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-del');
+        removeIdea(id);
+        renderVote();
+        renderPlanner();
+        renderDashboard();
       });
     });
   }
@@ -583,26 +648,32 @@
   function renderPlanner(){
     var el = document.getElementById('plannerGrid');
     if(isFocusWithin(el)) { document.getElementById('shareLink').textContent = window.location.href.split('#')[0]; return; }
+    var ideaIds = Object.keys(state.ideas).sort(function(a,b){ return scoreOfIdea(state.ideas[b]) - scoreOfIdea(state.ideas[a]); });
+
     el.innerHTML = DATES.map(function(dateStr){
-      var meal = state.meals[dateStr] || {name:'', sourceType:'other', sourceNote:''};
-      var options = SOURCE_TYPES.map(function(s){
-        return '<option value="'+s.key+'"'+(meal.sourceType===s.key?' selected':'')+'>'+s.label+'</option>';
+      var meal = state.meals[dateStr];
+      var currentIdeaId = meal ? meal.ideaId : '';
+      var options = '<option value="">— nothing planned —</option>' + ideaIds.map(function(id){
+        var idea = state.ideas[id];
+        var t = tallyOf(idea);
+        var label = idea.name + '  (😋'+t.yum+' 😐'+t.meh+' 🤢'+t.no+')';
+        return '<option value="'+id+'"'+(currentIdeaId===id?' selected':'')+'>'+escapeHtml(label)+'</option>';
       }).join('');
+      var sourceHtml = meal ? '<div style="margin-top:8px;"><span class="meal-source">'+sourceLabel(meal.sourceType)+
+        (meal.sourceNote ? ' — '+escapeHtml(meal.sourceNote) : '')+'</span></div>' : '';
       return '<div class="day-card">' +
         '<div class="day-label">'+dayLabel(dateStr)+'</div>' +
-        '<input type="text" data-date="'+dateStr+'" data-field="name" placeholder="What\'s for dinner?" value="'+escapeHtml(meal.name||'')+'">' +
-        '<div class="day-row">' +
-          '<select data-date="'+dateStr+'" data-field="sourceType">'+options+'</select>' +
-          '<input type="text" class="source-note" data-date="'+dateStr+'" data-field="sourceNote" placeholder="link / note (optional)" value="'+escapeHtml(meal.sourceNote||'')+'">' +
-        '</div>' +
+        '<select class="assign-select" data-date="'+dateStr+'">'+options+'</select>' +
+        sourceHtml +
       '</div>';
     }).join('');
 
-    el.querySelectorAll('input,select').forEach(function(inp){
-      inp.addEventListener('change', function(){
-        var dateStr = inp.getAttribute('data-date');
-        var field = inp.getAttribute('data-field');
-        setMealField(dateStr, field, inp.value);
+    el.querySelectorAll('.assign-select').forEach(function(sel){
+      sel.addEventListener('change', function(){
+        var dateStr = sel.getAttribute('data-date');
+        assignMeal(dateStr, sel.value || null);
+        renderPlanner();
+        renderDashboard();
       });
     });
 
@@ -660,17 +731,17 @@
     var memberCount = Object.keys(state.members).length || 1;
     var html = DATES.map(function(dateStr){
       var meal = state.meals[dateStr];
-      if(!meal || !meal.name) return '';
-      var votes = meal.votes || {};
-      var tally = {yum:0, meh:0, no:0};
-      Object.keys(votes).forEach(function(vid){ if(tally[votes[vid]] !== undefined) tally[votes[vid]]++; });
+      if(!meal) return '';
+      var idea = state.ideas[meal.ideaId];
+      var tally = tallyOf(idea);
       var total = tally.yum+tally.meh+tally.no;
       var pct = function(n){ return total ? (n/total*100) : 0; };
       var flag = (tally.no >= Math.ceil(memberCount/2) && tally.no > 0)
         ? '<span class="flag">⚠️ heading for mutiny</span>' : '';
+      var removedNote = !idea ? ' <span class="flag" style="background:#EEE;color:#888;">suggestion removed</span>' : '';
       return '<div class="card">' +
         '<div class="meal-day">'+dayLabel(dateStr)+'</div>' +
-        '<div class="meal-name">'+escapeHtml(meal.name)+flag+'</div>' +
+        '<div class="meal-name">'+escapeHtml(meal.name)+flag+removedNote+'</div>' +
         '<div class="bar-row"><div class="bar">' +
           '<span style="width:'+pct(tally.yum)+'%;background:var(--yum)"></span>' +
           '<span style="width:'+pct(tally.meh)+'%;background:var(--meh)"></span>' +
@@ -679,7 +750,7 @@
         '<div class="vote-tally">😋 '+tally.yum+' · 😐 '+tally.meh+' · 🤢 '+tally.no+' · ('+total+'/'+memberCount+' voted)</div>' +
       '</div>';
     }).join('');
-    el.innerHTML = html || '<div class="empty-hint">Plan some dinners first.</div>';
+    el.innerHTML = html || '<div class="empty-hint">Assign some meals in the Planner first.</div>';
   }
 
   // ---------- Render: Household ----------
@@ -723,7 +794,17 @@
     });
   });
 
-  // ---------- Add item / member ----------
+  // ---------- Add idea / item / member ----------
+  document.getElementById('addIdeaBtn').addEventListener('click', function(){
+    var name = document.getElementById('ideaName').value.trim();
+    if(!name) return;
+    var sourceType = document.getElementById('ideaSourceType').value;
+    var sourceNote = document.getElementById('ideaSourceNote').value.trim();
+    addIdea(uid(), {name:name, sourceType:sourceType, sourceNote:sourceNote});
+    document.getElementById('ideaName').value = '';
+    document.getElementById('ideaSourceNote').value = '';
+    renderVote();
+  });
   document.getElementById('addItemBtn').addEventListener('click', function(){
     var name = document.getElementById('itemName').value.trim();
     if(!name) return;

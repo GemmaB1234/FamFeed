@@ -29,25 +29,59 @@ module.exports = async (req, res) => {
         await kv.hdel('members', id);
         break;
       }
-      case 'setMealField': {
-        const { date, field, value } = body;
-        if (!date || !field) throw new Error('date and field required');
-        const existingRaw = await kv.hget('meals', date);
-        const existing = safeParse(existingRaw, { name: '', sourceType: 'other', sourceNote: '' });
-        existing[field] = value;
-        await kv.hset('meals', { [date]: JSON.stringify(existing) });
+      case 'addIdea': {
+        const { id, idea } = body;
+        if (!id || !idea) throw new Error('id and idea required');
+        await kv.hset('ideas', {
+          [id]: JSON.stringify({
+            name: idea.name || '',
+            sourceType: idea.sourceType || 'other',
+            sourceNote: idea.sourceNote || '',
+          }),
+        });
         break;
       }
-      case 'vote': {
-        const { date, memberId, choice } = body;
-        if (!date || !memberId || !choice) throw new Error('date, memberId, choice required');
-        const key = date + '__' + memberId;
-        const current = await kv.hget('votes', key);
+      case 'removeIdea': {
+        const { id } = body;
+        if (!id) throw new Error('id required');
+        await kv.hdel('ideas', id);
+        // clean up any votes cast on this idea
+        const allVotes = await kv.hgetall('ideaVotes');
+        const toDelete = Object.keys(allVotes || {}).filter((k) => k.indexOf(id + '__') === 0);
+        if (toDelete.length) await kv.hdel('ideaVotes', ...toDelete);
+        break;
+      }
+      case 'voteIdea': {
+        const { ideaId, memberId, choice } = body;
+        if (!ideaId || !memberId || !choice) throw new Error('ideaId, memberId, choice required');
+        const key = ideaId + '__' + memberId;
+        const current = await kv.hget('ideaVotes', key);
         if (current === choice) {
-          await kv.hdel('votes', key); // tap same choice again to unvote
+          await kv.hdel('ideaVotes', key); // tap same choice again to unvote
         } else {
-          await kv.hset('votes', { [key]: choice });
+          await kv.hset('ideaVotes', { [key]: choice });
         }
+        break;
+      }
+      case 'assignMeal': {
+        const { date, ideaId } = body;
+        if (!date || !ideaId) throw new Error('date and ideaId required');
+        const ideaRaw = await kv.hget('ideas', ideaId);
+        const idea = safeParse(ideaRaw, { name: '', sourceType: 'other', sourceNote: '' });
+        await kv.hset('meals', {
+          [date]: JSON.stringify({
+            ideaId: ideaId,
+            name: idea.name,
+            sourceType: idea.sourceType,
+            sourceNote: idea.sourceNote,
+          }),
+        });
+        break;
+      }
+      case 'clearMeal': {
+        const { date } = body;
+        if (!date) throw new Error('date required');
+        await kv.hdel('meals', date);
         break;
       }
       case 'addItem': {
