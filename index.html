@@ -188,6 +188,15 @@
   }
   .cat-badge.new{ background:#FFF1E6; color:var(--sunset); }
   .cat-badge.safe{ background:#E8F9F5; color:var(--teal); }
+  .tag-pill{
+    display:inline-flex; align-items:center; gap:4px; margin-top:6px; margin-right:6px;
+    font-size:0.78rem; padding:3px 10px; border-radius:999px;
+    background:#F0EDF6; color:var(--ink);
+  }
+  .filter-row.filter-row2{ margin-top:8px; }
+  .filter-row select, .filter-row input[type=text]{
+    padding:6px 10px; border-radius:999px; border:1px solid #EEE3F5; font-size:0.82rem;
+  }
 
   /* Calendar */
   .calendar-grid{
@@ -350,6 +359,31 @@
           <option value="other" selected>📝 Other</option>
         </select>
         <input type="text" id="ideaSourceNote" placeholder="link / note (optional)">
+        <select id="ideaProtein">
+          <option value="chicken">🍗 Chicken</option>
+          <option value="beef">🐄 Beef</option>
+          <option value="pork">🐖 Pork</option>
+          <option value="fish">🐟 Fish &amp; seafood</option>
+          <option value="veggie">🥦 Veggie / vegan</option>
+          <option value="egg">🥚 Egg</option>
+          <option value="carb">🍝 Pasta / carb-based</option>
+          <option value="other" selected>🍽️ Other</option>
+        </select>
+        <select id="ideaEffort">
+          <option value="quick">⚡ Quick (&lt;30 min)</option>
+          <option value="medium" selected>🍳 Medium effort</option>
+          <option value="project">🛠️ Weekend project</option>
+        </select>
+        <select id="ideaCuisine">
+          <option value="british">🇬🇧 British</option>
+          <option value="italian">🇮🇹 Italian</option>
+          <option value="mexican">🌮 Mexican</option>
+          <option value="indian">🇮🇳 Indian</option>
+          <option value="asian">🥢 Asian</option>
+          <option value="mediterranean">🫒 Mediterranean</option>
+          <option value="american">🍔 American</option>
+          <option value="other" selected>🌍 Other</option>
+        </select>
         <button class="btn" id="addIdeaBtn">Suggest it</button>
       </div>
     </div>
@@ -358,6 +392,37 @@
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="new">🎉 New</button>
         <button class="filter-btn" data-filter="safe">😌 Safe bets</button>
+      </div>
+      <div class="filter-row filter-row2">
+        <input type="text" id="ideaSearch" placeholder="🔍 Search…">
+        <select id="filterProtein">
+          <option value="">Any protein</option>
+          <option value="chicken">🍗 Chicken</option>
+          <option value="beef">🐄 Beef</option>
+          <option value="pork">🐖 Pork</option>
+          <option value="fish">🐟 Fish &amp; seafood</option>
+          <option value="veggie">🥦 Veggie / vegan</option>
+          <option value="egg">🥚 Egg</option>
+          <option value="carb">🍝 Pasta / carb-based</option>
+          <option value="other">🍽️ Other</option>
+        </select>
+        <select id="filterEffort">
+          <option value="">Any effort</option>
+          <option value="quick">⚡ Quick</option>
+          <option value="medium">🍳 Medium</option>
+          <option value="project">🛠️ Weekend project</option>
+        </select>
+        <select id="filterCuisine">
+          <option value="">Any cuisine</option>
+          <option value="british">🇬🇧 British</option>
+          <option value="italian">🇮🇹 Italian</option>
+          <option value="mexican">🌮 Mexican</option>
+          <option value="indian">🇮🇳 Indian</option>
+          <option value="asian">🥢 Asian</option>
+          <option value="mediterranean">🫒 Mediterranean</option>
+          <option value="american">🍔 American</option>
+          <option value="other">🌍 Other</option>
+        </select>
       </div>
     </div>
     <div id="voteList"></div>
@@ -542,6 +607,47 @@
     return '<span class="cat-badge '+c+'">'+meta.emoji+' '+meta.label+'</span>';
   }
   var ideaFilter = 'all'; // 'all' | 'new' | 'safe'
+
+  var PROTEIN_TYPES = {
+    chicken: {emoji:'🍗', label:'Chicken'},
+    beef: {emoji:'🐄', label:'Beef'},
+    pork: {emoji:'🐖', label:'Pork'},
+    fish: {emoji:'🐟', label:'Fish & seafood'},
+    veggie: {emoji:'🥦', label:'Veggie / vegan'},
+    egg: {emoji:'🥚', label:'Egg'},
+    carb: {emoji:'🍝', label:'Pasta / carb-based'},
+    other: {emoji:'🍽️', label:'Other'}
+  };
+  var EFFORT_LEVELS = {
+    quick: {emoji:'⚡', label:'Quick'},
+    medium: {emoji:'🍳', label:'Medium effort'},
+    project: {emoji:'🛠️', label:'Weekend project'}
+  };
+  var CUISINE_TYPES = {
+    british: {emoji:'🇬🇧', label:'British'},
+    italian: {emoji:'🇮🇹', label:'Italian'},
+    mexican: {emoji:'🌮', label:'Mexican'},
+    indian: {emoji:'🇮🇳', label:'Indian'},
+    asian: {emoji:'🥢', label:'Asian'},
+    mediterranean: {emoji:'🫒', label:'Mediterranean'},
+    american: {emoji:'🍔', label:'American'},
+    other: {emoji:'🌍', label:'Other'}
+  };
+  function tagOf(taxonomy, value, fallback){
+    return taxonomy[value] ? value : fallback;
+  }
+  function proteinOf(idea){ return tagOf(PROTEIN_TYPES, idea && idea.protein, 'other'); }
+  function effortOf(idea){ return tagOf(EFFORT_LEVELS, idea && idea.effort, 'medium'); }
+  function cuisineOf(idea){ return tagOf(CUISINE_TYPES, idea && idea.cuisine, 'other'); }
+  function tagPill(taxonomy, key){
+    var meta = taxonomy[key];
+    return '<span class="tag-pill">'+meta.emoji+' '+meta.label+'</span>';
+  }
+
+  var ideaSearchText = '';
+  var proteinFilter = '';
+  var effortFilter = '';
+  var cuisineFilter = '';
 
   // ---------- Ingredient pulling panels (per idea, client-side only) ----------
   // ideaId -> {open, status:'idle'|'loading'|'success'|'failed', ingredients:[{text,checked}], instructions:[], manualText:'', week:1}
@@ -832,11 +938,18 @@
       el.innerHTML = '<div class="card empty-hint">No suggestions yet — add one above!</div>';
       return;
     }
+    var searchLower = ideaSearchText.trim().toLowerCase();
     var ids = allIds.filter(function(id){
-      return ideaFilter === 'all' || categoryOf(state.ideas[id]) === ideaFilter;
+      var idea = state.ideas[id];
+      if(ideaFilter !== 'all' && categoryOf(idea) !== ideaFilter) return false;
+      if(proteinFilter && proteinOf(idea) !== proteinFilter) return false;
+      if(effortFilter && effortOf(idea) !== effortFilter) return false;
+      if(cuisineFilter && cuisineOf(idea) !== cuisineFilter) return false;
+      if(searchLower && idea.name.toLowerCase().indexOf(searchLower) === -1) return false;
+      return true;
     });
     if(ids.length === 0){
-      el.innerHTML = '<div class="card empty-hint">Nothing in this filter yet.</div>';
+      el.innerHTML = '<div class="card empty-hint">Nothing matches these filters.</div>';
       return;
     }
     ids.sort(function(a,b){ return scoreOfIdea(state.ideas[b]) - scoreOfIdea(state.ideas[a]); });
@@ -853,12 +966,13 @@
 
       var sourceHtml = '<span class="meal-source">'+sourceLabel(idea.sourceType)+
         (idea.sourceNote ? ' — '+escapeHtml(idea.sourceNote) : '')+'</span>';
+      var tagsHtml = tagPill(PROTEIN_TYPES, proteinOf(idea)) + tagPill(EFFORT_LEVELS, effortOf(idea)) + tagPill(CUISINE_TYPES, cuisineOf(idea));
 
       return '<div class="card">' +
         '<div class="meal-vote-card">' +
           '<div class="meal-info">' +
             '<div class="meal-name">'+escapeHtml(idea.name)+'</div>' +
-            categoryBadge(idea) + sourceHtml +
+            categoryBadge(idea) + sourceHtml + '<div>'+tagsHtml+'</div>' +
             '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>' +
           '</div>' +
           '<div class="vote-buttons">'+buttons+
@@ -1183,7 +1297,10 @@
     var category = document.getElementById('ideaCategory').value;
     var sourceType = document.getElementById('ideaSourceType').value;
     var sourceNote = document.getElementById('ideaSourceNote').value.trim();
-    addIdea(uid(), {name:name, category:category, sourceType:sourceType, sourceNote:sourceNote});
+    var protein = document.getElementById('ideaProtein').value;
+    var effort = document.getElementById('ideaEffort').value;
+    var cuisine = document.getElementById('ideaCuisine').value;
+    addIdea(uid(), {name:name, category:category, sourceType:sourceType, sourceNote:sourceNote, protein:protein, effort:effort, cuisine:cuisine});
     document.getElementById('ideaName').value = '';
     document.getElementById('ideaSourceNote').value = '';
     renderVote();
@@ -1192,6 +1309,22 @@
     var btn = e.target.closest('.filter-btn');
     if(!btn) return;
     ideaFilter = btn.getAttribute('data-filter');
+    renderVote();
+  });
+  document.getElementById('ideaSearch').addEventListener('input', function(e){
+    ideaSearchText = e.target.value;
+    renderVote();
+  });
+  document.getElementById('filterProtein').addEventListener('change', function(e){
+    proteinFilter = e.target.value;
+    renderVote();
+  });
+  document.getElementById('filterEffort').addEventListener('change', function(e){
+    effortFilter = e.target.value;
+    renderVote();
+  });
+  document.getElementById('filterCuisine').addEventListener('change', function(e){
+    cuisineFilter = e.target.value;
     renderVote();
   });
   document.getElementById('addItemBtn').addEventListener('click', function(){

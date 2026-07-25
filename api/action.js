@@ -43,6 +43,9 @@ module.exports = async (req, res) => {
             category: idea.category === 'safe' ? 'safe' : 'new',
             sourceType: idea.sourceType || 'other',
             sourceNote: idea.sourceNote || '',
+            protein: idea.protein || 'other',
+            effort: idea.effort || 'medium',
+            cuisine: idea.cuisine || 'other',
           }),
         });
         break;
