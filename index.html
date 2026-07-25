@@ -200,11 +200,12 @@
 
   /* Calendar */
   .calendar-grid{
-    display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px;
+    display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:4px; margin-bottom:6px;
+    width:100%; overflow:hidden;
   }
-  .cal-dow{ text-align:center; font-size:0.7rem; color:var(--muted); font-weight:700; text-transform:uppercase; }
+  .cal-dow{ min-width:0; text-align:center; font-size:0.7rem; color:var(--muted); font-weight:700; text-transform:uppercase; }
   .cal-cell{
-    background:#FAF9FC; border:1px solid #F0EDF6; border-radius:10px; padding:6px 4px;
+    min-width:0; background:#FAF9FC; border:1px solid #F0EDF6; border-radius:10px; padding:6px 2px;
     min-height:56px; cursor:pointer; text-align:center; font-size:0.72rem;
     display:flex; flex-direction:column; align-items:center; gap:2px;
     transition:transform .12s ease;
@@ -214,7 +215,7 @@
   .cal-cell.today{ border-color:var(--grape); border-width:2px; }
   .cal-daynum{ font-weight:800; font-size:0.85rem; }
   .cal-meal{
-    font-size:0.65rem; line-height:1.15; padding:2px 4px; border-radius:6px; max-width:100%;
+    font-size:0.65rem; line-height:1.15; padding:2px 4px; border-radius:6px; width:100%; min-width:0; box-sizing:border-box;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   .cal-meal.new{ background:#FFF1E6; color:var(--sunset); }
@@ -222,8 +223,8 @@
   .cal-meal.empty-slot{ color:var(--muted); font-style:italic; }
   .day-card.highlight{ outline:2px solid var(--grape); outline-offset:2px; }
   .cal-backup{
-    font-size:0.6rem; margin-top:1px; padding:1px 4px; border-radius:5px;
-    background:#FFF6D9; color:#946200; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font-size:0.6rem; margin-top:1px; padding:1px 4px; border-radius:5px; box-sizing:border-box;
+    background:#FFF6D9; color:#946200; width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   .backup-badge{
     display:inline-flex; align-items:center; gap:4px; margin-top:6px;
