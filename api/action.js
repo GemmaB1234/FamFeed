@@ -75,8 +75,12 @@ module.exports = async (req, res) => {
       case 'assignMeal': {
         const { date, ideaId } = body;
         if (!date || !ideaId) throw new Error('date and ideaId required');
-        const ideaRaw = await kv.hget('ideas', ideaId);
+        const [ideaRaw, existingMealRaw] = await Promise.all([
+          kv.hget('ideas', ideaId),
+          kv.hget('meals', date),
+        ]);
         const idea = safeParse(ideaRaw, { name: '', category: 'new', sourceType: 'other', sourceNote: '' });
+        const existingMeal = safeParse(existingMealRaw, {});
         await kv.hset('meals', {
           [date]: JSON.stringify({
             ideaId: ideaId,
@@ -84,6 +88,7 @@ module.exports = async (req, res) => {
             category: idea.category === 'safe' ? 'safe' : 'new',
             sourceType: idea.sourceType,
             sourceNote: idea.sourceNote,
+            backupFood: existingMeal.backupFood || '',
           }),
         });
         break;
@@ -92,6 +97,27 @@ module.exports = async (req, res) => {
         const { date } = body;
         if (!date) throw new Error('date required');
         await kv.hdel('meals', date);
+        break;
+      }
+      case 'setMealBackup': {
+        const { date, backupFood } = body;
+        if (!date) throw new Error('date required');
+        const existingRaw = await kv.hget('meals', date);
+        const existing = safeParse(existingRaw, { name: '', category: 'new', sourceType: 'other', sourceNote: '' });
+        existing.backupFood = backupFood || '';
+        await kv.hset('meals', { [date]: JSON.stringify(existing) });
+        break;
+      }
+      case 'addSafeFood': {
+        const { id, name } = body;
+        if (!id || !name) throw new Error('id and name required');
+        await kv.hset('safeFoods', { [id]: name });
+        break;
+      }
+      case 'removeSafeFood': {
+        const { id } = body;
+        if (!id) throw new Error('id required');
+        await kv.hdel('safeFoods', id);
         break;
       }
       case 'addItem': {

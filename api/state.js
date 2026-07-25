@@ -15,13 +15,14 @@ const kv = global.__famFeedRedis || (global.__famFeedRedis = new Redis(process.e
 // }
 module.exports = async (req, res) => {
   try {
-    const [members, ideasRaw, ideaVotesRaw, mealsRaw, shoppingRaw, archivedRaw] = await Promise.all([
+    const [members, ideasRaw, ideaVotesRaw, mealsRaw, shoppingRaw, archivedRaw, safeFoods] = await Promise.all([
       kv.hgetall('members'),
       kv.hgetall('ideas'),
       kv.hgetall('ideaVotes'),
       kv.hgetall('meals'),
       kv.hgetall('shoppingList'),
       kv.hgetall('archivedLists'),
+      kv.hgetall('safeFoods'),
     ]);
 
     const ideas = {};
@@ -63,6 +64,7 @@ module.exports = async (req, res) => {
       meals,
       shoppingList,
       archivedLists,
+      safeFoods: safeFoods || {},
     });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message ? e.message : e) });

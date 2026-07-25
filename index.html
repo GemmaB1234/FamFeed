@@ -221,6 +221,15 @@
   .cal-meal.safe{ background:#E8F9F5; color:var(--teal); }
   .cal-meal.empty-slot{ color:var(--muted); font-style:italic; }
   .day-card.highlight{ outline:2px solid var(--grape); outline-offset:2px; }
+  .cal-backup{
+    font-size:0.6rem; margin-top:1px; padding:1px 4px; border-radius:5px;
+    background:#FFF6D9; color:#946200; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .backup-badge{
+    display:inline-flex; align-items:center; gap:4px; margin-top:6px;
+    font-size:0.8rem; padding:3px 10px; border-radius:999px; background:#FFF6D9; color:#946200;
+  }
+  .backup-select{ margin-top:8px; }
 
   /* Ingredient pulling */
   .ingredient-panel{ margin-top:12px; padding-top:12px; border-top:1px dashed #EEE3F5; }
@@ -507,6 +516,15 @@
       </div>
       <div id="memberChips" style="margin-top:12px;"></div>
     </div>
+    <div class="card">
+      <h2>🆘 Safe foods</h2>
+      <div class="sub">Dead-simple backups for when someone flat-out won't eat the main meal — packet noodles, fish fingers, toast, whatever always works. These show up as an optional add-on for each night in the Planner.</div>
+      <div class="add-item-form">
+        <input type="text" id="safeFoodName" placeholder="e.g. Packet noodles">
+        <button class="btn" id="addSafeFoodBtn">Add</button>
+      </div>
+      <div id="safeFoodChips" style="margin-top:12px;"></div>
+    </div>
   </section>
 </main>
 
@@ -529,9 +547,10 @@
   var state = {
     members: {},       // id -> name
     ideas: {},          // id -> {name, sourceType, sourceNote, votes:{memberId:choice}}  ("Can we have?" pool)
-    meals: {},          // dateStr -> {ideaId, name, sourceType, sourceNote}  (assigned plan snapshot)
+    meals: {},          // dateStr -> {ideaId, name, sourceType, sourceNote, backupFood}  (assigned plan snapshot)
     shoppingList: {},   // id -> {name, qty, category, checked, week}
-    archivedLists: {}   // id -> {archivedAt, label, items:[{name,qty,category,checked}]}
+    archivedLists: {},  // id -> {archivedAt, label, items:[{name,qty,category,checked}]}
+    safeFoods: {}        // id -> name  (fussy-eater backup foods)
   };
 
   function tallyOf(idea){
@@ -740,6 +759,7 @@
         state.meals = data.meals || {};
         state.shoppingList = data.shoppingList || {};
         state.archivedLists = data.archivedLists || {};
+        state.safeFoods = data.safeFoods || {};
         renderAll();
       })
       .catch(function(err){ console.error('Fam Feed: failed to load state', err); });
@@ -774,6 +794,10 @@
     var si1=uid(), si2=uid();
     state.shoppingList[si1] = {name:"chicken thighs", qty:"1kg", category:"Meat & Fish", checked:false, week:1};
     state.shoppingList[si2] = {name:"peppers", qty:"4", category:"Produce", checked:false, week:1};
+    var sf1=uid(), sf2=uid();
+    state.safeFoods[sf1] = "Packet noodles";
+    state.safeFoods[sf2] = "Fish fingers & beans";
+    state.meals[DATES[1]].backupFood = "Packet noodles";
   }
 
   function addMember(id, name){
@@ -808,8 +832,22 @@
       return sendAction({type:'clearMeal', date:dateStr});
     }
     var idea = state.ideas[ideaId] || {};
-    state.meals[dateStr] = {ideaId:ideaId, name:idea.name||'', sourceType:idea.sourceType||'other', sourceNote:idea.sourceNote||'', category:categoryOf(idea)};
+    var existingBackup = (state.meals[dateStr] && state.meals[dateStr].backupFood) || '';
+    state.meals[dateStr] = {ideaId:ideaId, name:idea.name||'', sourceType:idea.sourceType||'other', sourceNote:idea.sourceNote||'', category:categoryOf(idea), backupFood:existingBackup};
     return sendAction({type:'assignMeal', date:dateStr, ideaId:ideaId});
+  }
+  function setMealBackup(dateStr, backupFood){
+    if(!state.meals[dateStr]) state.meals[dateStr] = {name:'', sourceType:'other', sourceNote:'', category:'new'};
+    state.meals[dateStr].backupFood = backupFood;
+    return sendAction({type:'setMealBackup', date:dateStr, backupFood:backupFood});
+  }
+  function addSafeFood(id, name){
+    state.safeFoods[id] = name;
+    return sendAction({type:'addSafeFood', id:id, name:name});
+  }
+  function removeSafeFood(id){
+    delete state.safeFoods[id];
+    return sendAction({type:'removeSafeFood', id:id});
   }
   function addShoppingItem(id, item){
     state.shoppingList[id] = item;
@@ -1062,19 +1100,42 @@
       }).join('');
       var sourceHtml = meal ? '<div style="margin-top:8px;">'+categoryBadge(meal)+'<span class="meal-source">'+sourceLabel(meal.sourceType)+
         (meal.sourceNote ? ' — '+escapeHtml(meal.sourceNote) : '')+'</span></div>' : '';
+
+      var safeFoodIds = Object.keys(state.safeFoods);
+      var currentBackup = meal ? (meal.backupFood || '') : '';
+      var backupOptions = '<option value="">— no backup —</option>' + safeFoodIds.map(function(id){
+        var name = state.safeFoods[id];
+        return '<option value="'+escapeHtml(name)+'"'+(currentBackup===name?' selected':'')+'>'+escapeHtml(name)+'</option>';
+      }).join('');
+      var backupHtml = safeFoodIds.length
+        ? '<div class="sub" style="margin:8px 0 2px;">🆘 Backup food, if it\'s rejected:</div>' +
+          '<select class="assign-select backup-select" data-backup-date="'+dateStr+'">'+backupOptions+'</select>'
+        : '';
+
       return '<div class="day-card" id="daycard-'+dateStr+'" data-day-date="'+dateStr+'">' +
         '<div class="day-label">'+dayLabel(dateStr)+'</div>' +
         '<select class="assign-select" data-date="'+dateStr+'">'+options+'</select>' +
         sourceHtml +
+        backupHtml +
       '</div>';
     }).join('');
 
-    el.querySelectorAll('.assign-select').forEach(function(sel){
+    el.querySelectorAll('.assign-select[data-date]').forEach(function(sel){
       sel.addEventListener('change', function(){
         var dateStr = sel.getAttribute('data-date');
         assignMeal(dateStr, sel.value || null);
         renderPlanner();
         renderDashboard();
+        renderCalendar();
+      });
+    });
+    el.querySelectorAll('[data-backup-date]').forEach(function(sel){
+      sel.addEventListener('change', function(){
+        var dateStr = sel.getAttribute('data-backup-date');
+        setMealBackup(dateStr, sel.value || '');
+        renderPlanner();
+        renderDashboard();
+        renderCalendar();
       });
     });
 
@@ -1096,8 +1157,9 @@
       var mealHtml = meal
         ? '<div class="cal-meal '+categoryOf(meal)+'">'+escapeHtml(meal.name)+'</div>'
         : '<div class="cal-meal empty-slot">—</div>';
+      var backupHtml = (meal && meal.backupFood) ? '<div class="cal-backup">🆘 '+escapeHtml(meal.backupFood)+'</div>' : '';
       html += '<div class="cal-cell'+(dateStr===todayStr?' today':'')+'" data-jump="'+dateStr+'">' +
-        '<div class="cal-daynum">'+dt.getDate()+'</div>' + mealHtml +
+        '<div class="cal-daynum">'+dt.getDate()+'</div>' + mealHtml + backupHtml +
       '</div>';
     });
     el.innerHTML = html;
@@ -1236,6 +1298,7 @@
         '<div class="meal-day">'+dayLabel(dateStr)+'</div>' +
         '<div class="meal-name">'+escapeHtml(meal.name)+flag+removedNote+'</div>' +
         categoryBadge(meal) +
+        (meal.backupFood ? '<span class="backup-badge">🆘 '+escapeHtml(meal.backupFood)+'</span>' : '') +
         '<div class="bar-row"><div class="bar">' +
           '<span style="width:'+pct(tally.yum)+'%;background:var(--yum)"></span>' +
           '<span style="width:'+pct(tally.meh)+'%;background:var(--meh)"></span>' +
@@ -1250,7 +1313,7 @@
   // ---------- Render: Household ----------
   function renderHousehold(){
     var el = document.getElementById('memberChips');
-    if(isFocusWithin(document.querySelector('#view-household .add-item-form'))) return;
+    if(document.activeElement && document.activeElement.id === 'memberName') return;
     var ids = Object.keys(state.members);
     if(ids.length === 0){
       el.innerHTML = '<div class="empty-hint">No one added yet.</div>';
@@ -1269,6 +1332,30 @@
     });
   }
 
+  // ---------- Render: Safe Foods ----------
+  function renderSafeFoods(){
+    var el = document.getElementById('safeFoodChips');
+    if(!el) return;
+    if(document.activeElement && document.activeElement.id === 'safeFoodName') return;
+    var ids = Object.keys(state.safeFoods);
+    if(ids.length === 0){
+      el.innerHTML = '<div class="empty-hint">No safe foods added yet — a couple of go-tos make busy nights much easier.</div>';
+      return;
+    }
+    el.innerHTML = ids.map(function(id){
+      return '<span class="member-chip">'+escapeHtml(state.safeFoods[id])+
+        ' <button data-id="'+id+'">✕</button></span>';
+    }).join('');
+    el.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-id');
+        removeSafeFood(id);
+        renderSafeFoods();
+        renderPlanner();
+      });
+    });
+  }
+
   function renderAll(){
     renderWhoBar();
     renderVote();
@@ -1278,6 +1365,7 @@
     renderArchive();
     renderDashboard();
     renderHousehold();
+    renderSafeFoods();
   }
 
   // ---------- Tab nav ----------
@@ -1345,6 +1433,14 @@
     document.getElementById('memberName').value = '';
     renderHousehold();
     renderWhoBar();
+  });
+  document.getElementById('addSafeFoodBtn').addEventListener('click', function(){
+    var name = document.getElementById('safeFoodName').value.trim();
+    if(!name) return;
+    addSafeFood(uid(), name);
+    document.getElementById('safeFoodName').value = '';
+    renderSafeFoods();
+    renderPlanner();
   });
   document.getElementById('copyLinkBtn').addEventListener('click', function(){
     navigator.clipboard.writeText(window.location.href.split('#')[0]).then(function(){
