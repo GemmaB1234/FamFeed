@@ -40,6 +40,7 @@ module.exports = async (req, res) => {
         await kv.hset('ideas', {
           [id]: JSON.stringify({
             name: idea.name || '',
+            category: idea.category === 'safe' ? 'safe' : 'new',
             sourceType: idea.sourceType || 'other',
             sourceNote: idea.sourceNote || '',
           }),
@@ -72,11 +73,12 @@ module.exports = async (req, res) => {
         const { date, ideaId } = body;
         if (!date || !ideaId) throw new Error('date and ideaId required');
         const ideaRaw = await kv.hget('ideas', ideaId);
-        const idea = safeParse(ideaRaw, { name: '', sourceType: 'other', sourceNote: '' });
+        const idea = safeParse(ideaRaw, { name: '', category: 'new', sourceType: 'other', sourceNote: '' });
         await kv.hset('meals', {
           [date]: JSON.stringify({
             ideaId: ideaId,
             name: idea.name,
+            category: idea.category === 'safe' ? 'safe' : 'new',
             sourceType: idea.sourceType,
             sourceNote: idea.sourceNote,
           }),
@@ -119,6 +121,31 @@ module.exports = async (req, res) => {
           return item && item.checked;
         });
         if (toDelete.length) await kv.hdel('shoppingList', ...toDelete);
+        break;
+      }
+      case 'archiveWeek': {
+        const { id, week, label } = body;
+        if (!id || !week) throw new Error('id and week required');
+        const all = await kv.hgetall('shoppingList');
+        const idsInWeek = Object.keys(all || {}).filter((itemId) => {
+          const item = safeParse(all[itemId], null);
+          return item && Number(item.week || 1) === Number(week);
+        });
+        const items = idsInWeek.map((itemId) => safeParse(all[itemId], null)).filter(Boolean);
+        await kv.hset('archivedLists', {
+          [id]: JSON.stringify({
+            archivedAt: new Date().toISOString(),
+            label: label || ('Week ' + week),
+            items,
+          }),
+        });
+        if (idsInWeek.length) await kv.hdel('shoppingList', ...idsInWeek);
+        break;
+      }
+      case 'deleteArchive': {
+        const { id } = body;
+        if (!id) throw new Error('id required');
+        await kv.hdel('archivedLists', id);
         break;
       }
       default:

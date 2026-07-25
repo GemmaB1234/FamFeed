@@ -176,6 +176,61 @@
   .assign-select{
     width:100%; padding:9px 12px; border-radius:10px; border:1px solid #EEE3F5; font-size:0.92rem;
   }
+  .filter-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .filter-btn{
+    border:none; background:#F6F5FA; color:var(--ink); padding:7px 14px; border-radius:999px;
+    font-size:0.85rem; font-weight:600; cursor:pointer;
+  }
+  .filter-btn.active{ background:linear-gradient(90deg, var(--teal), var(--grape)); color:#fff; }
+  .cat-badge{
+    display:inline-flex; align-items:center; gap:4px; margin-top:6px; margin-right:6px;
+    font-size:0.8rem; padding:3px 10px; border-radius:999px;
+  }
+  .cat-badge.new{ background:#FFF1E6; color:var(--sunset); }
+  .cat-badge.safe{ background:#E8F9F5; color:var(--teal); }
+
+  /* Calendar */
+  .calendar-grid{
+    display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:6px;
+  }
+  .cal-dow{ text-align:center; font-size:0.7rem; color:var(--muted); font-weight:700; text-transform:uppercase; }
+  .cal-cell{
+    background:#FAF9FC; border:1px solid #F0EDF6; border-radius:10px; padding:6px 4px;
+    min-height:56px; cursor:pointer; text-align:center; font-size:0.72rem;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    transition:transform .12s ease;
+  }
+  .cal-cell:hover{ transform:translateY(-2px); }
+  .cal-cell.empty{ visibility:hidden; cursor:default; }
+  .cal-cell.today{ border-color:var(--grape); border-width:2px; }
+  .cal-daynum{ font-weight:800; font-size:0.85rem; }
+  .cal-meal{
+    font-size:0.65rem; line-height:1.15; padding:2px 4px; border-radius:6px; max-width:100%;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .cal-meal.new{ background:#FFF1E6; color:var(--sunset); }
+  .cal-meal.safe{ background:#E8F9F5; color:var(--teal); }
+  .cal-meal.empty-slot{ color:var(--muted); font-style:italic; }
+  .day-card.highlight{ outline:2px solid var(--grape); outline-offset:2px; }
+
+  /* Ingredient pulling */
+  .ingredient-panel{ margin-top:12px; padding-top:12px; border-top:1px dashed #EEE3F5; }
+  .ingredient-line{ display:block; font-size:0.9rem; padding:4px 0; }
+  .ingredient-line input{ margin-right:8px; }
+
+  /* Weekly shopping / archive */
+  .week-header{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin:18px 0 10px; }
+  .week-header:first-child{ margin-top:0; }
+  .week-title{ font-weight:800; font-size:1rem; }
+  .week-range{ color:var(--muted); font-size:0.8rem; font-weight:500; }
+  .archive-entry{
+    background:#FAF9FC; border-radius:12px; padding:12px 14px; margin-bottom:10px;
+  }
+  .archive-entry-head{ display:flex; justify-content:space-between; align-items:center; cursor:pointer; gap:10px; }
+  .archive-entry-items{ margin-top:10px; display:none; }
+  .archive-entry-items.open{ display:block; }
+  .archive-item-line{ font-size:0.85rem; padding:3px 0; color:var(--ink); }
+  .archive-item-line.was-checked{ color:var(--muted); text-decoration:line-through; }
 
   /* Planner grid */
   .day-grid{ display:grid; grid-template-columns:1fr; gap:12px; }
@@ -265,6 +320,7 @@
   <button data-view="vote" class="active">🙋 Can We Have?</button>
   <button data-view="planner">📅 Planner</button>
   <button data-view="shopping">🛒 Shopping List</button>
+  <button data-view="archive">🗄️ Archive</button>
   <button data-view="dashboard">📊 Dashboard</button>
   <button data-view="household">👪 Household</button>
 </nav>
@@ -279,6 +335,10 @@
       <div class="sub">Suggest anything you fancy — everyone votes below, and the favourites get slotted into the Planner.</div>
       <div class="add-item-form">
         <input type="text" id="ideaName" placeholder="e.g. Tray-bake fajitas">
+        <select id="ideaCategory">
+          <option value="new">🎉 Something new</option>
+          <option value="safe">😌 Old faithful (safe bet)</option>
+        </select>
         <select id="ideaSourceType">
           <option value="cookbook">📖 Cookbook</option>
           <option value="tiktok">📱 TikTok</option>
@@ -293,11 +353,23 @@
         <button class="btn" id="addIdeaBtn">Suggest it</button>
       </div>
     </div>
+    <div class="card" style="padding:10px 14px;">
+      <div class="filter-row" id="ideaFilterRow">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="new">🎉 New</button>
+        <button class="filter-btn" data-filter="safe">😌 Safe bets</button>
+      </div>
+    </div>
     <div id="voteList"></div>
   </section>
 
   <!-- PLANNER VIEW -->
   <section id="view-planner" class="view">
+    <div class="card">
+      <h2>At a glance</h2>
+      <div class="sub">Tap a day to jump to it below.</div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
     <div class="card">
       <h2>Plan this fortnight's dinners</h2>
       <div class="sub">Pick from the suggestions in 🙋 Can We Have? for each night — best-voted ones are listed first.</div>
@@ -317,7 +389,7 @@
   <section id="view-shopping" class="view">
     <div class="card">
       <h2>Shopping list</h2>
-      <div class="sub">One running list for the fortnight. Tick things off as they go in the trolley.</div>
+      <div class="sub">Split by week to match the Planner. Tick things off as they go in the trolley, then archive a week once you're done shopping.</div>
       <div class="add-item-form">
         <input type="text" id="itemName" placeholder="e.g. chicken thighs">
         <input type="text" class="qty" id="itemQty" placeholder="qty">
@@ -331,10 +403,22 @@
           <option>Household</option>
           <option>Other</option>
         </select>
+        <select id="itemWeek">
+          <option value="1">This week</option>
+          <option value="2">Next week</option>
+        </select>
         <button class="btn" id="addItemBtn">Add</button>
       </div>
-      <button class="btn secondary" id="clearCheckedBtn">Clear ticked items</button>
-      <div id="shoppingLists" style="margin-top:16px;"></div>
+      <div id="shoppingLists" style="margin-top:8px;"></div>
+    </div>
+  </section>
+
+  <!-- ARCHIVE VIEW -->
+  <section id="view-archive" class="view">
+    <div class="card">
+      <h2>Past shopping lists</h2>
+      <div class="sub">Archived weeks, in case you need to remember what you bought last time.</div>
+      <div id="archiveList"></div>
     </div>
   </section>
 
@@ -381,7 +465,8 @@
     members: {},       // id -> name
     ideas: {},          // id -> {name, sourceType, sourceNote, votes:{memberId:choice}}  ("Can we have?" pool)
     meals: {},          // dateStr -> {ideaId, name, sourceType, sourceNote}  (assigned plan snapshot)
-    shoppingList: {}    // id -> {name, qty, category, checked}
+    shoppingList: {},   // id -> {name, qty, category, checked, week}
+    archivedLists: {}   // id -> {archivedAt, label, items:[{name,qty,category,checked}]}
   };
 
   function tallyOf(idea){
@@ -410,6 +495,18 @@
     var dt = new Date(dateStr+"T00:00:00");
     return dt.toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
   }
+  function shortDate(dateStr){
+    var dt = new Date(dateStr+"T00:00:00");
+    return dt.toLocaleDateString(undefined,{month:'short', day:'numeric'});
+  }
+  var WEEK_DATES = { 1: DATES.slice(0,7), 2: DATES.slice(7,14) };
+  function weekRangeLabel(week){
+    var d = WEEK_DATES[week];
+    return shortDate(d[0]) + ' – ' + shortDate(d[d.length-1]);
+  }
+  function weekOfDate(dateStr){
+    return WEEK_DATES[1].indexOf(dateStr) !== -1 ? 1 : 2;
+  }
 
   var SOURCE_TYPES = [
     {key:'cookbook', label:'📖 Cookbook'},
@@ -432,6 +529,89 @@
     {key:'no', emoji:'🤢'}
   ];
 
+  var IDEA_CATEGORIES = {
+    'new':  {emoji:'🎉', label:'Something new'},
+    'safe': {emoji:'😌', label:'Old faithful'}
+  };
+  function categoryOf(idea){
+    return (idea && idea.category === 'safe') ? 'safe' : 'new';
+  }
+  function categoryBadge(idea){
+    var c = categoryOf(idea);
+    var meta = IDEA_CATEGORIES[c];
+    return '<span class="cat-badge '+c+'">'+meta.emoji+' '+meta.label+'</span>';
+  }
+  var ideaFilter = 'all'; // 'all' | 'new' | 'safe'
+
+  // ---------- Ingredient pulling panels (per idea, client-side only) ----------
+  // ideaId -> {open, status:'idle'|'loading'|'success'|'failed', ingredients:[{text,checked}], instructions:[], manualText:'', week:1}
+  var ideaPanels = {};
+
+  function getPanel(id){
+    if(!ideaPanels[id]) ideaPanels[id] = {open:false, status:'idle', ingredients:[], instructions:[], manualText:'', week:1};
+    return ideaPanels[id];
+  }
+  function togglePanel(id){
+    var p = getPanel(id);
+    p.open = !p.open;
+    renderVote();
+  }
+  function tryPullIngredients(id, url){
+    var p = getPanel(id);
+    p.status = 'loading';
+    renderVote();
+    fetch('/api/extract-recipe', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({url:url})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data && data.ok && data.ingredients && data.ingredients.length){
+        p.status = 'success';
+        p.ingredients = data.ingredients.map(function(t){ return {text:t, checked:true}; });
+        p.instructions = data.instructions || [];
+      } else {
+        p.status = 'failed';
+      }
+      renderVote();
+    })
+    .catch(function(){
+      p.status = 'failed';
+      renderVote();
+    });
+  }
+  function parseIngredientLine(line){
+    var m = line.match(/^([\d]+[\d./\s]*\s*(?:g|kg|ml|l|cup|cups|tbsp|tsp|oz|lb|lbs|clove|cloves|can|cans|tin|tins|pack|packs)?)\s+(.+)$/i);
+    if(m && m[2]) return {qty: m[1].trim(), name: m[2].trim()};
+    return {qty:'', name: line};
+  }
+  function addPulledIngredientsToShoppingList(id){
+    var p = getPanel(id);
+    var week = p.week || 1;
+    p.ingredients.forEach(function(ing){
+      if(!ing.checked) return;
+      var parsed = parseIngredientLine(ing.text);
+      addShoppingItem(uid(), {name:parsed.name, qty:parsed.qty, category:'Other', week:week, checked:false});
+    });
+    p.open = false;
+    renderVote();
+    renderShopping();
+  }
+  function addManualIngredientsToShoppingList(id){
+    var p = getPanel(id);
+    var week = p.week || 1;
+    var lines = (p.manualText||'').split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    lines.forEach(function(line){
+      var parsed = parseIngredientLine(line);
+      addShoppingItem(uid(), {name:parsed.name, qty:parsed.qty, category:'Other', week:week, checked:false});
+    });
+    p.open = false;
+    p.manualText = '';
+    renderVote();
+    renderShopping();
+  }
+
   // ---------- Backend wiring: poll /api/state, POST /api/action ----------
   var POLL_MS = 2500;
 
@@ -453,6 +633,7 @@
         state.ideas = data.ideas || {};
         state.meals = data.meals || {};
         state.shoppingList = data.shoppingList || {};
+        state.archivedLists = data.archivedLists || {};
         renderAll();
       })
       .catch(function(err){ console.error('Fam Feed: failed to load state', err); });
@@ -479,14 +660,14 @@
     state.members[m2] = "Dad";
     state.members[m3] = "Alfie (14)";
     var i1 = uid(), i2 = uid();
-    state.ideas[i1] = {name:"Tray-bake fajitas", sourceType:"tiktok", sourceNote:"", votes:{}};
+    state.ideas[i1] = {name:"Tray-bake fajitas", sourceType:"tiktok", sourceNote:"", category:"new", votes:{}};
     state.ideas[i1].votes[m1]='yum'; state.ideas[i1].votes[m2]='yum'; state.ideas[i1].votes[m3]='no';
-    state.ideas[i2] = {name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card", votes:{}};
+    state.ideas[i2] = {name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card", category:"safe", votes:{}};
     state.ideas[i2].votes[m1]='yum'; state.ideas[i2].votes[m2]='yum'; state.ideas[i2].votes[m3]='yum';
-    state.meals[DATES[1]] = {ideaId:i2, name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card"};
+    state.meals[DATES[1]] = {ideaId:i2, name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card", category:"safe"};
     var si1=uid(), si2=uid();
-    state.shoppingList[si1] = {name:"chicken thighs", qty:"1kg", category:"Meat & Fish", checked:false};
-    state.shoppingList[si2] = {name:"peppers", qty:"4", category:"Produce", checked:false};
+    state.shoppingList[si1] = {name:"chicken thighs", qty:"1kg", category:"Meat & Fish", checked:false, week:1};
+    state.shoppingList[si2] = {name:"peppers", qty:"4", category:"Produce", checked:false, week:1};
   }
 
   function addMember(id, name){
@@ -521,7 +702,7 @@
       return sendAction({type:'clearMeal', date:dateStr});
     }
     var idea = state.ideas[ideaId] || {};
-    state.meals[dateStr] = {ideaId:ideaId, name:idea.name||'', sourceType:idea.sourceType||'other', sourceNote:idea.sourceNote||''};
+    state.meals[dateStr] = {ideaId:ideaId, name:idea.name||'', sourceType:idea.sourceType||'other', sourceNote:idea.sourceNote||'', category:categoryOf(idea)};
     return sendAction({type:'assignMeal', date:dateStr, ideaId:ideaId});
   }
   function addShoppingItem(id, item){
@@ -541,6 +722,17 @@
       if(state.shoppingList[id].checked) delete state.shoppingList[id];
     });
     return sendAction({type:'clearChecked'});
+  }
+  function archiveWeek(week){
+    var id = uid();
+    Object.keys(state.shoppingList).forEach(function(itemId){
+      if((state.shoppingList[itemId].week||1) === week) delete state.shoppingList[itemId];
+    });
+    return sendAction({type:'archiveWeek', id:id, week:week, label:'Week '+week+' ('+weekRangeLabel(week)+')'});
+  }
+  function deleteArchive(id){
+    delete state.archivedLists[id];
+    return sendAction({type:'deleteArchive', id:id});
   }
 
   // Skip re-rendering a section while the user has focus inside it —
@@ -583,14 +775,68 @@
     });
   }
 
+  // ---------- Ingredient panel markup helpers ----------
+  function weekSelectHtml(id, panel){
+    return '<div style="margin:8px 0;"><select data-weeksel="'+id+'">' +
+      '<option value="1"'+(panel.week===2?'':' selected')+'>This week</option>' +
+      '<option value="2"'+(panel.week===2?' selected':'')+'>Next week</option>' +
+    '</select></div>';
+  }
+  function manualBoxHtml(id, panel){
+    return '<textarea data-manualtext="'+id+'" rows="4" placeholder="e.g.&#10;2 chicken breasts&#10;1 cup rice&#10;200g broccoli" ' +
+      'style="width:100%;padding:9px 12px;border-radius:10px;border:1px solid #EEE3F5;font-size:0.9rem;margin-top:6px;">'+escapeHtml(panel.manualText||'')+'</textarea>' +
+      weekSelectHtml(id, panel) +
+      '<button class="btn" data-addmanual="'+id+'">Add to shopping list</button>';
+  }
+  function ingredientPanelHtml(id, idea){
+    var panel = getPanel(id);
+    var toggleBtn = '<button class="btn secondary" data-toggle="'+id+'" style="margin-top:10px;">🧾 '+(panel.open?'Hide ingredients':'Ingredients')+'</button>';
+    if(!panel.open) return toggleBtn;
+
+    var hasUrl = idea.sourceNote && /^https?:\/\//i.test(idea.sourceNote.trim());
+    var body = '';
+    if(panel.status === 'idle'){
+      body = hasUrl
+        ? '<button class="btn" data-pull="'+id+'" data-url="'+escapeHtml(idea.sourceNote.trim())+'">🔍 Try pulling ingredients from the link</button> ' +
+          '<button class="btn secondary" data-manual="'+id+'">✍️ I\'ll paste them myself</button>'
+        : '<div class="sub" style="margin:0 0 4px;">No link saved for this one — paste the ingredients below:</div>' + manualBoxHtml(id, panel);
+    } else if(panel.status === 'loading'){
+      body = '<span class="empty-hint">Reading the recipe…</span>';
+    } else if(panel.status === 'success'){
+      body = '<div class="sub" style="margin:0 0 4px;">Found '+panel.ingredients.length+' ingredients — untick anything you don\'t need:</div>' +
+        panel.ingredients.map(function(ing, idx){
+          return '<label class="ingredient-line"><input type="checkbox" data-ping="'+id+'" data-idx="'+idx+'" '+(ing.checked?'checked':'')+'>'+escapeHtml(ing.text)+'</label>';
+        }).join('') +
+        (panel.instructions && panel.instructions.length ? '<div class="sub" style="margin-top:10px;">📋 Method:</div><ol style="font-size:0.85rem;color:var(--muted);padding-left:20px;">'+
+          panel.instructions.map(function(step){ return '<li>'+escapeHtml(step)+'</li>'; }).join('')+'</ol>' : '') +
+        weekSelectHtml(id, panel) +
+        '<button class="btn" data-addpulled="'+id+'">Add ticked to shopping list</button>';
+    } else if(panel.status === 'failed'){
+      body = '<div class="sub" style="margin:0 0 4px;">Couldn\'t auto-read ingredients from that link — paste them below instead:</div>' + manualBoxHtml(id, panel);
+    }
+    return toggleBtn + '<div class="ingredient-panel">' + body + '</div>';
+  }
+
   // ---------- Render: Vote ("Can We Have?") ----------
   function renderVote(){
     var el = document.getElementById('voteList');
-    if(isFocusWithin(document.querySelector('#view-vote .add-item-form'))) return;
+    if(isFocusWithin(document.querySelector('#view-vote .add-item-form')) || isFocusWithin(el)) return;
     var me = getMe();
-    var ids = Object.keys(state.ideas);
-    if(ids.length === 0){
+    var allIds = Object.keys(state.ideas);
+
+    document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-filter') === ideaFilter);
+    });
+
+    if(allIds.length === 0){
       el.innerHTML = '<div class="card empty-hint">No suggestions yet — add one above!</div>';
+      return;
+    }
+    var ids = allIds.filter(function(id){
+      return ideaFilter === 'all' || categoryOf(state.ideas[id]) === ideaFilter;
+    });
+    if(ids.length === 0){
+      el.innerHTML = '<div class="card empty-hint">Nothing in this filter yet.</div>';
       return;
     }
     ids.sort(function(a,b){ return scoreOfIdea(state.ideas[b]) - scoreOfIdea(state.ideas[a]); });
@@ -608,15 +854,18 @@
       var sourceHtml = '<span class="meal-source">'+sourceLabel(idea.sourceType)+
         (idea.sourceNote ? ' — '+escapeHtml(idea.sourceNote) : '')+'</span>';
 
-      return '<div class="card meal-vote-card">' +
-        '<div class="meal-info">' +
-          '<div class="meal-name">'+escapeHtml(idea.name)+'</div>' +
-          sourceHtml +
-          '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>' +
+      return '<div class="card">' +
+        '<div class="meal-vote-card">' +
+          '<div class="meal-info">' +
+            '<div class="meal-name">'+escapeHtml(idea.name)+'</div>' +
+            categoryBadge(idea) + sourceHtml +
+            '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>' +
+          '</div>' +
+          '<div class="vote-buttons">'+buttons+
+            '<button class="vote-btn del-idea" data-del="'+id+'" title="Remove suggestion">🗑️</button>' +
+          '</div>' +
         '</div>' +
-        '<div class="vote-buttons">'+buttons+
-          '<button class="vote-btn del-idea" data-del="'+id+'" title="Remove suggestion">🗑️</button>' +
-        '</div>' +
+        ingredientPanelHtml(id, idea) +
       '</div>';
     }).join('');
     el.innerHTML = html;
@@ -642,6 +891,43 @@
         renderDashboard();
       });
     });
+    el.querySelectorAll('[data-toggle]').forEach(function(btn){
+      btn.addEventListener('click', function(){ togglePanel(btn.getAttribute('data-toggle')); });
+    });
+    el.querySelectorAll('[data-pull]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        tryPullIngredients(btn.getAttribute('data-pull'), btn.getAttribute('data-url'));
+      });
+    });
+    el.querySelectorAll('[data-manual]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        getPanel(btn.getAttribute('data-manual')).status = 'failed';
+        renderVote();
+      });
+    });
+    el.querySelectorAll('[data-addpulled]').forEach(function(btn){
+      btn.addEventListener('click', function(){ addPulledIngredientsToShoppingList(btn.getAttribute('data-addpulled')); });
+    });
+    el.querySelectorAll('[data-addmanual]').forEach(function(btn){
+      btn.addEventListener('click', function(){ addManualIngredientsToShoppingList(btn.getAttribute('data-addmanual')); });
+    });
+    el.querySelectorAll('[data-ping]').forEach(function(cb){
+      cb.addEventListener('change', function(){
+        var pid = cb.getAttribute('data-ping');
+        var idx = parseInt(cb.getAttribute('data-idx'),10);
+        getPanel(pid).ingredients[idx].checked = cb.checked;
+      });
+    });
+    el.querySelectorAll('[data-weeksel]').forEach(function(sel){
+      sel.addEventListener('change', function(){
+        getPanel(sel.getAttribute('data-weeksel')).week = parseInt(sel.value,10);
+      });
+    });
+    el.querySelectorAll('[data-manualtext]').forEach(function(ta){
+      ta.addEventListener('input', function(){
+        getPanel(ta.getAttribute('data-manualtext')).manualText = ta.value;
+      });
+    });
   }
 
   // ---------- Render: Planner ----------
@@ -656,12 +942,13 @@
       var options = '<option value="">— nothing planned —</option>' + ideaIds.map(function(id){
         var idea = state.ideas[id];
         var t = tallyOf(idea);
-        var label = idea.name + '  (😋'+t.yum+' 😐'+t.meh+' 🤢'+t.no+')';
+        var catEmoji = IDEA_CATEGORIES[categoryOf(idea)].emoji;
+        var label = catEmoji+' '+idea.name + '  (😋'+t.yum+' 😐'+t.meh+' 🤢'+t.no+')';
         return '<option value="'+id+'"'+(currentIdeaId===id?' selected':'')+'>'+escapeHtml(label)+'</option>';
       }).join('');
-      var sourceHtml = meal ? '<div style="margin-top:8px;"><span class="meal-source">'+sourceLabel(meal.sourceType)+
+      var sourceHtml = meal ? '<div style="margin-top:8px;">'+categoryBadge(meal)+'<span class="meal-source">'+sourceLabel(meal.sourceType)+
         (meal.sourceNote ? ' — '+escapeHtml(meal.sourceNote) : '')+'</span></div>' : '';
-      return '<div class="day-card">' +
+      return '<div class="day-card" id="daycard-'+dateStr+'" data-day-date="'+dateStr+'">' +
         '<div class="day-label">'+dayLabel(dateStr)+'</div>' +
         '<select class="assign-select" data-date="'+dateStr+'">'+options+'</select>' +
         sourceHtml +
@@ -680,33 +967,73 @@
     document.getElementById('shareLink').textContent = window.location.href.split('#')[0];
   }
 
+  // ---------- Render: Calendar (overview above Planner) ----------
+  function renderCalendar(){
+    var el = document.getElementById('calendarGrid');
+    if(!el) return;
+    var todayStr = new Date().toISOString().slice(0,10);
+    var firstDow = new Date(DATES[0]+"T00:00:00").getDay(); // 0=Sun
+    var dowLabels = ['S','M','T','W','T','F','S'];
+    var html = dowLabels.map(function(l){ return '<div class="cal-dow">'+l+'</div>'; }).join('');
+    for(var i=0;i<firstDow;i++){ html += '<div class="cal-cell empty"></div>'; }
+    DATES.forEach(function(dateStr){
+      var dt = new Date(dateStr+"T00:00:00");
+      var meal = state.meals[dateStr];
+      var mealHtml = meal
+        ? '<div class="cal-meal '+categoryOf(meal)+'">'+escapeHtml(meal.name)+'</div>'
+        : '<div class="cal-meal empty-slot">—</div>';
+      html += '<div class="cal-cell'+(dateStr===todayStr?' today':'')+'" data-jump="'+dateStr+'">' +
+        '<div class="cal-daynum">'+dt.getDate()+'</div>' + mealHtml +
+      '</div>';
+    });
+    el.innerHTML = html;
+    el.querySelectorAll('[data-jump]').forEach(function(cell){
+      cell.addEventListener('click', function(){
+        var dateStr = cell.getAttribute('data-jump');
+        var card = document.getElementById('daycard-'+dateStr);
+        if(!card) return;
+        card.scrollIntoView({behavior:'smooth', block:'center'});
+        card.classList.add('highlight');
+        setTimeout(function(){ card.classList.remove('highlight'); }, 1600);
+      });
+    });
+  }
+
   // ---------- Render: Shopping ----------
   var CATEGORIES = ["Produce","Meat & Fish","Dairy & Eggs","Bakery","Pantry","Frozen","Household","Other"];
   function renderShopping(){
     var el = document.getElementById('shoppingLists');
     if(isFocusWithin(document.querySelector('#view-shopping .add-item-form'))) return;
     var items = state.shoppingList || {};
-    var ids = Object.keys(items);
-    if(ids.length === 0){
-      el.innerHTML = '<div class="empty-hint">List\'s empty — add your first item above.</div>';
-      return;
-    }
-    var html = '';
-    CATEGORIES.forEach(function(cat){
-      var catIds = ids.filter(function(id){ return (items[id].category||'Other') === cat; });
-      if(catIds.length === 0) return;
-      html += '<div class="cat-group"><div class="cat-title">'+cat+'</div>';
-      catIds.forEach(function(id){
-        var it = items[id];
-        html += '<div class="item-row'+(it.checked?' checked':'')+'">' +
-          '<input type="checkbox" data-id="'+id+'" class="chk" '+(it.checked?'checked':'')+'>' +
-          '<span class="item-name">'+escapeHtml(it.name)+'</span>' +
-          '<span class="item-qty">'+escapeHtml(it.qty||'')+'</span>' +
-          '<button data-id="'+id+'" class="del">✕</button>' +
-        '</div>';
-      });
-      html += '</div>';
-    });
+
+    var html = [1,2].map(function(week){
+      var weekIds = Object.keys(items).filter(function(id){ return (items[id].week||1) === week; });
+      var body;
+      if(weekIds.length === 0){
+        body = '<div class="empty-hint">Nothing on the list for this week yet.</div>';
+      } else {
+        body = '';
+        CATEGORIES.forEach(function(cat){
+          var catIds = weekIds.filter(function(id){ return (items[id].category||'Other') === cat; });
+          if(catIds.length === 0) return;
+          body += '<div class="cat-group"><div class="cat-title">'+cat+'</div>';
+          catIds.forEach(function(id){
+            var it = items[id];
+            body += '<div class="item-row'+(it.checked?' checked':'')+'">' +
+              '<input type="checkbox" data-id="'+id+'" class="chk" '+(it.checked?'checked':'')+'>' +
+              '<span class="item-name">'+escapeHtml(it.name)+'</span>' +
+              '<span class="item-qty">'+escapeHtml(it.qty||'')+'</span>' +
+              '<button data-id="'+id+'" class="del">✕</button>' +
+            '</div>';
+          });
+          body += '</div>';
+        });
+      }
+      return '<div class="week-header">' +
+          '<div><span class="week-title">'+(week===1?'This week':'Next week')+'</span> <span class="week-range">'+weekRangeLabel(week)+'</span></div>' +
+          (weekIds.length ? '<button class="btn secondary" data-archive-week="'+week+'">🗄️ Archive this week</button>' : '') +
+        '</div>' + body;
+    }).join('');
     el.innerHTML = html;
 
     el.querySelectorAll('.chk').forEach(function(cb){
@@ -721,6 +1048,58 @@
         var id = btn.getAttribute('data-id');
         deleteShoppingItem(id);
         renderShopping();
+      });
+    });
+    el.querySelectorAll('[data-archive-week]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var week = parseInt(btn.getAttribute('data-archive-week'),10);
+        if(!window.confirm('Archive and clear the list for '+(week===1?'this week':'next week')+'?')) return;
+        archiveWeek(week);
+        renderShopping();
+        renderArchive();
+      });
+    });
+  }
+
+  // ---------- Render: Archive ----------
+  function renderArchive(){
+    var el = document.getElementById('archiveList');
+    if(!el) return;
+    var ids = Object.keys(state.archivedLists).sort(function(a,b){
+      return new Date(state.archivedLists[b].archivedAt) - new Date(state.archivedLists[a].archivedAt);
+    });
+    if(ids.length === 0){
+      el.innerHTML = '<div class="empty-hint">No archived lists yet — archive a finished week from the Shopping List tab.</div>';
+      return;
+    }
+    el.innerHTML = ids.map(function(id){
+      var a = state.archivedLists[id];
+      var when = new Date(a.archivedAt).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+      var items = a.items || [];
+      return '<div class="archive-entry">' +
+        '<div class="archive-entry-head" data-expand="'+id+'">' +
+          '<div><strong>'+escapeHtml(a.label||'Archived list')+'</strong><div class="week-range">Archived '+when+' · '+items.length+' items</div></div>' +
+          '<button class="vote-btn del-idea" data-del-archive="'+id+'" title="Delete archive">🗑️</button>' +
+        '</div>' +
+        '<div class="archive-entry-items" id="archive-items-'+id+'">' +
+          items.map(function(it){
+            return '<div class="archive-item-line'+(it.checked?' was-checked':'')+'">'+(it.checked?'✓ ':'• ')+escapeHtml(it.name)+(it.qty?' ('+escapeHtml(it.qty)+')':'')+'</div>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    el.querySelectorAll('[data-expand]').forEach(function(head){
+      head.addEventListener('click', function(e){
+        if(e.target.closest('[data-del-archive]')) return;
+        var id = head.getAttribute('data-expand');
+        document.getElementById('archive-items-'+id).classList.toggle('open');
+      });
+    });
+    el.querySelectorAll('[data-del-archive]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        deleteArchive(btn.getAttribute('data-del-archive'));
+        renderArchive();
       });
     });
   }
@@ -742,6 +1121,7 @@
       return '<div class="card">' +
         '<div class="meal-day">'+dayLabel(dateStr)+'</div>' +
         '<div class="meal-name">'+escapeHtml(meal.name)+flag+removedNote+'</div>' +
+        categoryBadge(meal) +
         '<div class="bar-row"><div class="bar">' +
           '<span style="width:'+pct(tally.yum)+'%;background:var(--yum)"></span>' +
           '<span style="width:'+pct(tally.meh)+'%;background:var(--meh)"></span>' +
@@ -779,7 +1159,9 @@
     renderWhoBar();
     renderVote();
     renderPlanner();
+    renderCalendar();
     renderShopping();
+    renderArchive();
     renderDashboard();
     renderHousehold();
   }
@@ -798,11 +1180,18 @@
   document.getElementById('addIdeaBtn').addEventListener('click', function(){
     var name = document.getElementById('ideaName').value.trim();
     if(!name) return;
+    var category = document.getElementById('ideaCategory').value;
     var sourceType = document.getElementById('ideaSourceType').value;
     var sourceNote = document.getElementById('ideaSourceNote').value.trim();
-    addIdea(uid(), {name:name, sourceType:sourceType, sourceNote:sourceNote});
+    addIdea(uid(), {name:name, category:category, sourceType:sourceType, sourceNote:sourceNote});
     document.getElementById('ideaName').value = '';
     document.getElementById('ideaSourceNote').value = '';
+    renderVote();
+  });
+  document.getElementById('ideaFilterRow').addEventListener('click', function(e){
+    var btn = e.target.closest('.filter-btn');
+    if(!btn) return;
+    ideaFilter = btn.getAttribute('data-filter');
     renderVote();
   });
   document.getElementById('addItemBtn').addEventListener('click', function(){
@@ -810,13 +1199,10 @@
     if(!name) return;
     var qty = document.getElementById('itemQty').value.trim();
     var cat = document.getElementById('itemCat').value;
-    addShoppingItem(uid(), {name:name, qty:qty, category:cat, checked:false});
+    var week = parseInt(document.getElementById('itemWeek').value, 10);
+    addShoppingItem(uid(), {name:name, qty:qty, category:cat, checked:false, week:week});
     document.getElementById('itemName').value = '';
     document.getElementById('itemQty').value = '';
-    renderShopping();
-  });
-  document.getElementById('clearCheckedBtn').addEventListener('click', function(){
-    clearCheckedItems();
     renderShopping();
   });
   document.getElementById('addMemberBtn').addEventListener('click', function(){
