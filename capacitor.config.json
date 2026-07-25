@@ -1,0 +1,12 @@
+{
+  "appId": "com.famfeed.app",
+  "appName": "Fam Feed",
+  "webDir": "www",
+  "server": {
+    "url": "https://REPLACE-WITH-YOUR-VERCEL-URL.vercel.app",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
