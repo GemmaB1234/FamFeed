@@ -301,6 +301,11 @@
   .side-row-name{ font-weight:700; margin-right:auto; }
   .side-row-actions{ display:flex; gap:4px; }
   .side-select{ margin-top:8px; }
+  .side-check-list{ display:flex; flex-wrap:wrap; gap:6px 12px; }
+  .side-check{
+    display:inline-flex; align-items:center; gap:5px; font-size:0.85rem;
+    background:#F6F5FA; padding:5px 10px; border-radius:999px; cursor:pointer;
+  }
 
   /* Shopping list */
   .add-item-form{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
@@ -1104,8 +1109,14 @@
       return sendAction({type:'clearMeal', date:dateStr});
     }
     var idea = state.ideas[ideaId] || {};
-    var existingBackup = (state.meals[dateStr] && state.meals[dateStr].backupFood) || '';
-    state.meals[dateStr] = {ideaId:ideaId, name:idea.name||'', sourceType:idea.sourceType||'other', sourceNote:idea.sourceNote||'', category:categoryOf(idea), backupFood:existingBackup};
+    var existingMeal = state.meals[dateStr] || {};
+    var existingBackup = existingMeal.backupFood || '';
+    var existingSideIds = sideIdsOfMeal(existingMeal);
+    state.meals[dateStr] = {
+      ideaId:ideaId, name:idea.name||'', sourceType:idea.sourceType||'other', sourceNote:idea.sourceNote||'',
+      category:categoryOf(idea), backupFood:existingBackup,
+      sideIds:existingSideIds, sideNames:sideNamesFor(existingSideIds)
+    };
     return sendAction({type:'assignMeal', date:dateStr, ideaId:ideaId});
   }
   function setMealBackup(dateStr, backupFood){
@@ -1113,12 +1124,33 @@
     state.meals[dateStr].backupFood = backupFood;
     return sendAction({type:'setMealBackup', date:dateStr, backupFood:backupFood});
   }
-  function setMealSide(dateStr, sideId){
+  // A meal can have several sides at once (e.g. rice AND garlic bread) —
+  // sideIds is the list of attached side ids, sideNames a display snapshot.
+  function sideIdsOfMeal(meal){
+    if(meal && Array.isArray(meal.sideIds)) return meal.sideIds.slice();
+    if(meal && meal.sideId) return [meal.sideId]; // migrate older single-side meals
+    return [];
+  }
+  function sideNamesFor(sideIds){
+    return sideIds.map(function(id){ return state.sides[id] ? state.sides[id].name : ''; }).filter(Boolean);
+  }
+  // Prefer the snapshot on the meal itself (survives a side being renamed/deleted later);
+  // fall back to the legacy singular sideName field for older saved meals.
+  function sideNamesOfMeal(meal){
+    if(meal && Array.isArray(meal.sideNames) && meal.sideNames.length) return meal.sideNames;
+    if(meal && meal.sideName) return [meal.sideName];
+    return [];
+  }
+  function toggleMealSide(dateStr, sideId, on){
     if(!state.meals[dateStr]) state.meals[dateStr] = {name:'', sourceType:'other', sourceNote:'', category:'new'};
-    var side = sideId ? state.sides[sideId] : null;
-    state.meals[dateStr].sideId = sideId || '';
-    state.meals[dateStr].sideName = side ? side.name : '';
-    return sendAction({type:'setMealSide', date:dateStr, sideId:sideId || ''});
+    var meal = state.meals[dateStr];
+    var ids = sideIdsOfMeal(meal);
+    var pos = ids.indexOf(sideId);
+    if(on && pos === -1) ids.push(sideId);
+    if(!on && pos !== -1) ids.splice(pos, 1);
+    meal.sideIds = ids;
+    meal.sideNames = sideNamesFor(ids);
+    return sendAction({type:'toggleMealSide', date:dateStr, sideId:sideId, on:!!on});
   }
   function addSafeFood(id, name){
     state.safeFoods[id] = name;
@@ -1417,14 +1449,15 @@
         : '';
 
       var sideIds = Object.keys(state.sides || {});
-      var currentSideId = meal ? (meal.sideId || '') : '';
-      var sideOptions = '<option value="">— no side —</option>' + sideIds.map(function(id){
+      var currentSideIds = sideIdsOfMeal(meal);
+      var sideChecksHtml = sideIds.map(function(id){
         var s = state.sides[id];
-        return '<option value="'+id+'"'+(currentSideId===id?' selected':'')+'>'+escapeHtml(s.name)+'</option>';
+        var checked = currentSideIds.indexOf(id) !== -1;
+        return '<label class="side-check"><input type="checkbox" data-side-date="'+dateStr+'" data-side-id="'+id+'" '+(checked?'checked':'')+'>'+escapeHtml(s.name)+'</label>';
       }).join('');
       var sideHtml = sideIds.length
-        ? '<div class="sub" style="margin:8px 0 2px;">🍚 Side dish:</div>' +
-          '<select class="assign-select side-select" data-side-date="'+dateStr+'">'+sideOptions+'</select>'
+        ? '<div class="sub" style="margin:8px 0 2px;">🍚 Side dish(es) — pick as many as you like:</div>' +
+          '<div class="side-check-list">'+sideChecksHtml+'</div>'
         : '';
 
       return '<div class="day-card" id="daycard-'+dateStr+'" data-day-date="'+dateStr+'">' +
@@ -1454,10 +1487,11 @@
         renderCalendar();
       });
     });
-    el.querySelectorAll('[data-side-date]').forEach(function(sel){
-      sel.addEventListener('change', function(){
-        var dateStr = sel.getAttribute('data-side-date');
-        setMealSide(dateStr, sel.value || '');
+    el.querySelectorAll('input[data-side-date]').forEach(function(cb){
+      cb.addEventListener('change', function(){
+        var dateStr = cb.getAttribute('data-side-date');
+        var sideId = cb.getAttribute('data-side-id');
+        toggleMealSide(dateStr, sideId, cb.checked);
         renderPlanner();
         renderDashboard();
         renderCalendar();
@@ -1483,7 +1517,8 @@
         ? '<div class="cal-meal '+categoryOf(meal)+'">'+escapeHtml(meal.name)+'</div>'
         : '<div class="cal-meal empty-slot">—</div>';
       var backupHtml = (meal && meal.backupFood) ? '<div class="cal-backup">🆘 '+escapeHtml(meal.backupFood)+'</div>' : '';
-      var sideHtml = (meal && meal.sideName) ? '<div class="cal-side">🍚 '+escapeHtml(meal.sideName)+'</div>' : '';
+      var sideNames = sideNamesOfMeal(meal);
+      var sideHtml = sideNames.length ? '<div class="cal-side">🍚 '+escapeHtml(sideNames.join(', '))+'</div>' : '';
       html += '<div class="cal-cell'+(dateStr===todayStr?' today':'')+'" data-jump="'+dateStr+'">' +
         '<div class="cal-daynum">'+dt.getDate()+'</div>' + mealHtml + sideHtml + backupHtml +
       '</div>';
@@ -1625,7 +1660,7 @@
         '<div class="meal-name">'+escapeHtml(meal.name)+flag+removedNote+'</div>' +
         categoryBadge(meal) +
         (meal.backupFood ? '<span class="backup-badge">🆘 '+escapeHtml(meal.backupFood)+'</span>' : '') +
-        (meal.sideName ? '<span class="side-badge">🍚 '+escapeHtml(meal.sideName)+'</span>' : '') +
+        sideNamesOfMeal(meal).map(function(n){ return '<span class="side-badge">🍚 '+escapeHtml(n)+'</span>'; }).join('') +
         '<div class="bar-row"><div class="bar">' +
           '<span style="width:'+pct(tally.yum)+'%;background:var(--yum)"></span>' +
           '<span style="width:'+pct(tally.meh)+'%;background:var(--meh)"></span>' +

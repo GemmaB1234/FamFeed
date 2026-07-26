@@ -98,6 +98,9 @@ module.exports = async (req, res) => {
             sourceType: idea.sourceType,
             sourceNote: idea.sourceNote,
             backupFood: existingMeal.backupFood || '',
+            // changing the main dish keeps whatever sides were already picked for the night
+            sideIds: mealSideIds(existingMeal),
+            sideNames: existingMeal.sideNames || (existingMeal.sideName ? [existingMeal.sideName] : []),
           }),
         });
         break;
@@ -117,17 +120,26 @@ module.exports = async (req, res) => {
         await kv.hset('meals', { [date]: JSON.stringify(existing) });
         break;
       }
-      case 'setMealSide': {
-        const { date, sideId } = body;
-        if (!date) throw new Error('date required');
-        const [existingRaw, sideRaw] = await Promise.all([
+      case 'toggleMealSide': {
+        // A meal can have several sides at once (e.g. rice AND garlic bread) —
+        // this adds/removes one side id from the meal's sideIds list.
+        const { date, sideId, on } = body;
+        if (!date || !sideId) throw new Error('date and sideId required');
+        const [existingRaw, allSidesRaw] = await Promise.all([
           kv.hget('meals', date),
-          sideId ? kv.hget('sides', sideId) : Promise.resolve(null),
+          kv.hgetall('sides'),
         ]);
         const existing = safeParse(existingRaw, { name: '', category: 'new', sourceType: 'other', sourceNote: '' });
-        const side = sideId ? safeParse(sideRaw, null) : null;
-        existing.sideId = sideId || '';
-        existing.sideName = side ? side.name : '';
+        let ids = mealSideIds(existing);
+        const pos = ids.indexOf(sideId);
+        if (on && pos === -1) ids.push(sideId);
+        if (!on && pos !== -1) ids.splice(pos, 1);
+        const allSides = allSidesRaw || {};
+        existing.sideIds = ids;
+        existing.sideNames = ids
+          .map((id) => (allSides[id] ? safeParse(allSides[id], null) : null))
+          .filter(Boolean)
+          .map((s) => s.name);
         await kv.hset('meals', { [date]: JSON.stringify(existing) });
         break;
       }
@@ -236,4 +248,12 @@ function safeParse(str, fallback) {
   } catch (e) {
     return fallback;
   }
+}
+
+// Reads a meal's attached side ids, migrating older meals that only had a
+// single `sideId` field before multiple sides per meal was supported.
+function mealSideIds(meal) {
+  if (Array.isArray(meal.sideIds)) return meal.sideIds.slice();
+  if (meal.sideId) return [meal.sideId];
+  return [];
 }
