@@ -364,7 +364,8 @@
 </div>
 
 <nav class="tabs">
-  <button data-view="vote" class="active">🙋 Can We Have?</button>
+  <button data-view="vote" class="active">🍽️ Mains</button>
+  <button data-view="sides">🍚 Sides</button>
   <button data-view="planner">📅 Planner</button>
   <button data-view="shopping">🛒 Shopping List</button>
   <button data-view="archive">🗄️ Archive</button>
@@ -375,11 +376,11 @@
 <main>
   <div id="whoBar"></div>
 
-  <!-- VOTE VIEW (a.k.a. "Can We Have?") -->
+  <!-- VOTE VIEW (a.k.a. "Mains" — the "Can We Have?" idea pool) -->
   <section id="view-vote" class="view active">
     <div class="card">
-      <h2>Can we have...?</h2>
-      <div class="sub">Suggest anything you fancy — everyone votes below, and the favourites get slotted into the Planner.</div>
+      <h2>🍽️ Mains</h2>
+      <div class="sub">Suggest anything you fancy — "can we have this?" — everyone votes below, and the favourites get slotted into the Planner.</div>
       <div class="add-item-form">
         <input type="text" id="ideaName" placeholder="e.g. Tray-bake fajitas">
         <select id="ideaCategory">
@@ -459,6 +460,22 @@
       </div>
     </div>
     <div id="voteList"></div>
+  </section>
+
+  <!-- SIDES VIEW -->
+  <section id="view-sides" class="view">
+    <div class="card">
+      <h2>🍚 Sides library</h2>
+      <div class="sub">Go-to sides that pair with lots of different mains — egg fried rice, garlic bread, whatever. Add each one once with its link, then attach it to as many nights as you like from the Planner.</div>
+      <div class="add-item-form" id="sideForm">
+        <input type="text" id="sideName" placeholder="e.g. Egg fried rice">
+        <div id="sideLinksRows" style="width:100%;"></div>
+        <button type="button" class="btn secondary link-row-btn" id="addSideLinkRowBtn">+ Add another link</button>
+        <button class="btn" id="addSideBtn">Add side</button>
+        <button type="button" class="btn secondary" id="cancelSideEditBtn" style="display:none;">Cancel edit</button>
+      </div>
+      <div id="sidesList" style="margin-top:12px;"></div>
+    </div>
   </section>
 
   <!-- PLANNER VIEW -->
@@ -548,18 +565,6 @@
         <button class="btn" id="addSafeFoodBtn">Add</button>
       </div>
       <div id="safeFoodChips" style="margin-top:12px;"></div>
-    </div>
-    <div class="card">
-      <h2>🍚 Sides library</h2>
-      <div class="sub">Go-to sides that pair with lots of different mains — egg fried rice, garlic bread, whatever. Add each one once with its link, then attach it to as many nights as you like from the Planner.</div>
-      <div class="add-item-form" id="sideForm">
-        <input type="text" id="sideName" placeholder="e.g. Egg fried rice">
-        <div id="sideLinksRows" style="width:100%;"></div>
-        <button type="button" class="btn secondary link-row-btn" id="addSideLinkRowBtn">+ Add another link</button>
-        <button class="btn" id="addSideBtn">Add side</button>
-        <button type="button" class="btn secondary" id="cancelSideEditBtn" style="display:none;">Cancel edit</button>
-      </div>
-      <div id="sidesList" style="margin-top:12px;"></div>
     </div>
   </section>
 </main>
