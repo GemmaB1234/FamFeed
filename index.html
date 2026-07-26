@@ -434,6 +434,11 @@
           <option value="new">🎉 Something new</option>
           <option value="safe">😌 Old faithful (safe bet)</option>
         </select>
+        <button class="btn" id="addIdeaBtn">Suggest it</button>
+        <button type="button" class="btn secondary" id="cancelEditBtn" style="display:none;">Cancel edit</button>
+      </div>
+      <button type="button" class="btn secondary" id="toggleIdeaDetailsBtn" style="margin:-8px 0 12px;">+ Add a link or tags (optional)</button>
+      <div class="add-item-form" id="ideaMoreDetails" style="display:none;">
         <div id="ideaLinksRows" style="width:100%;"></div>
         <button type="button" class="btn secondary link-row-btn" id="addLinkRowBtn">+ Add another link</button>
         <select id="ideaProtein">
@@ -461,8 +466,6 @@
           <option value="american">🍔 American</option>
           <option value="other" selected>🌍 Other</option>
         </select>
-        <button class="btn" id="addIdeaBtn">Suggest it</button>
-        <button type="button" class="btn secondary" id="cancelEditBtn" style="display:none;">Cancel edit</button>
       </div>
       <div id="deleteIdeaWrap" style="display:none;">
         <a class="delete-idea-link" id="deleteIdeaLink">🗑️ Delete this suggestion</a>
@@ -851,6 +854,10 @@
     }
     return links;
   }
+  function setIdeaDetailsOpen(open){
+    document.getElementById('ideaMoreDetails').style.display = open ? '' : 'none';
+    document.getElementById('toggleIdeaDetailsBtn').textContent = open ? '− Hide link/tags' : '+ Add a link or tags (optional)';
+  }
   function resetIdeaForm(){
     editingIdeaId = null;
     document.getElementById('ideaName').value = '';
@@ -862,6 +869,7 @@
     document.getElementById('addIdeaBtn').textContent = 'Suggest it';
     document.getElementById('cancelEditBtn').style.display = 'none';
     document.getElementById('deleteIdeaWrap').style.display = 'none';
+    setIdeaDetailsOpen(false);
   }
   function editIdea(id){
     var idea = state.ideas[id];
@@ -876,6 +884,7 @@
     document.getElementById('addIdeaBtn').textContent = 'Save changes';
     document.getElementById('cancelEditBtn').style.display = '';
     document.getElementById('deleteIdeaWrap').style.display = '';
+    setIdeaDetailsOpen(true); // always show details while editing, so nothing's hidden away
     var formCard = document.querySelector('#view-vote .card');
     if(formCard && formCard.scrollIntoView) formCard.scrollIntoView({behavior:'smooth', block:'start'});
   }
@@ -1393,7 +1402,7 @@
   // ---------- Render: Vote ("Can We Have?") ----------
   function renderVote(){
     var el = document.getElementById('voteList');
-    if(isFocusWithin(document.querySelector('#view-vote .add-item-form')) || isFocusWithin(el)) return;
+    if(isFocusWithin(document.getElementById('ideaMoreDetails')) || isFocusWithin(document.querySelector('#view-vote .add-item-form')) || isFocusWithin(el)) return;
     var me = getMe();
     var allIds = Object.keys(state.ideas);
 
@@ -1958,6 +1967,11 @@
 
   // ---------- Add idea / item / member ----------
   renderLinkRows([{type:'other', note:''}]); // seed the first link row on page load
+  setIdeaDetailsOpen(false);
+  document.getElementById('toggleIdeaDetailsBtn').addEventListener('click', function(){
+    var isOpen = document.getElementById('ideaMoreDetails').style.display !== 'none';
+    setIdeaDetailsOpen(!isOpen);
+  });
   document.getElementById('addLinkRowBtn').addEventListener('click', function(){ addLinkRow(); });
   document.getElementById('cancelEditBtn').addEventListener('click', function(){ resetIdeaForm(); });
   document.getElementById('deleteIdeaLink').addEventListener('click', function(e){
