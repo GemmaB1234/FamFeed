@@ -267,7 +267,15 @@
     border-radius:14px;
     padding:14px 16px;
   }
-  .day-card .day-label{ font-weight:800; font-size:0.95rem; color:var(--sunset); margin-bottom:8px; }
+  .day-card .day-label{
+    font-weight:800; font-size:0.95rem; color:var(--sunset); margin-bottom:8px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .wheel-trigger{
+    background:#F6F5FA; border:none; border-radius:999px; padding:4px 10px; font-size:1rem;
+    cursor:pointer; line-height:1;
+  }
+  .wheel-trigger:hover{ background:#F0EBFA; }
   .day-card input[type=text]{
     width:100%;
     padding:9px 12px;
@@ -355,6 +363,40 @@
 
   .empty-hint{ color:var(--muted); font-size:0.88rem; text-align:center; padding:20px; }
   footer.note{ text-align:center; color:var(--muted); font-size:0.78rem; padding:24px 16px; }
+
+  /* Wheel randomiser */
+  .wheel-week-btns{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .wheel-overlay{
+    position:fixed; inset:0; background:rgba(30,15,45,0.6); display:flex;
+    align-items:center; justify-content:center; padding:20px; z-index:50;
+  }
+  .wheel-modal{
+    background:#fff; border-radius:20px; padding:24px 20px 20px; max-width:360px; width:100%;
+    text-align:center; box-shadow:0 24px 60px rgba(0,0,0,0.35); position:relative;
+  }
+  .wheel-close{
+    position:absolute; top:10px; right:12px; background:none; border:none; font-size:1.3rem;
+    color:var(--muted); cursor:pointer; line-height:1; padding:4px;
+  }
+  .wheel-outer{ position:relative; width:230px; height:230px; margin:14px auto 10px; }
+  .wheel-pointer{
+    position:absolute; top:-4px; left:50%; transform:translateX(-50%); z-index:2;
+    width:0; height:0; border-left:11px solid transparent; border-right:11px solid transparent;
+    border-top:18px solid var(--grape);
+  }
+  .wheel-disc{
+    position:absolute; inset:0; border-radius:50%; overflow:hidden;
+    box-shadow:0 6px 20px rgba(0,0,0,0.2), inset 0 0 0 4px #fff;
+    transition:transform 4.2s cubic-bezier(0.15,0.65,0.15,1);
+  }
+  .wheel-slice-label{
+    position:absolute; top:50%; left:50%; width:0; height:0;
+    font-size:0.62rem; font-weight:800; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.4);
+    white-space:nowrap;
+  }
+  .wheel-slice-label span{ display:inline-block; }
+  .wheel-result{ font-size:1.1rem; font-weight:800; min-height:1.6em; margin:6px 0; color:var(--grape); }
+  .wheel-for-date{ font-weight:700; margin-bottom:2px; }
 </style>
 </head>
 <body>
@@ -492,12 +534,16 @@
     </div>
     <div class="card">
       <h2>Plan this fortnight's dinners</h2>
-      <div class="sub">Pick from the suggestions in 🙋 Can We Have? for each night — best-voted ones are listed first.</div>
+      <div class="sub">Pick from the suggestions in 🍽️ Mains for each night — best-voted ones are listed first. No inspiration? Hit 🎲 and let the wheel decide.</div>
+      <div class="wheel-week-btns">
+        <button type="button" class="btn secondary" id="wheelWeek1Btn">🎲 Surprise me — this week's empty nights</button>
+        <button type="button" class="btn secondary" id="wheelWeek2Btn">🎲 Surprise me — next week's empty nights</button>
+      </div>
       <div class="day-grid" id="plannerGrid"></div>
     </div>
     <div class="card">
       <h2>Share with the family</h2>
-      <div class="sub">Send this exact page link to everyone — they'll land straight on the Can We Have? tab.</div>
+      <div class="sub">Send this exact page link to everyone — they'll land straight on the Mains tab.</div>
       <div class="link-box">
         <code id="shareLink"></code>
         <button class="btn" id="copyLinkBtn">Copy link</button>
@@ -573,6 +619,14 @@
     </div>
   </section>
 </main>
+
+<!-- WHEEL RANDOMISER MODAL -->
+<div class="wheel-overlay" id="wheelOverlay" style="display:none;">
+  <div class="wheel-modal">
+    <button type="button" class="wheel-close" id="wheelCloseBtn" title="Close">✕</button>
+    <div id="wheelBody"></div>
+  </div>
+</div>
 
 <footer class="note">Fam Feed · built for slightly chaotic family life</footer>
 
@@ -1418,6 +1472,156 @@
     wireIngredientPanelEvents(el, renderVote);
   }
 
+  // ---------- Wheel randomiser ----------
+  var WHEEL_COLORS = ['#FF6B4A','#8E5CF7','#2BB3A3','#FFB648','#5AA9E6','#FF7AA8','#7ED957','#B98AFB'];
+  var MAX_WHEEL_SEGMENTS = 10;
+  var wheelState = null; // {queue:[dates], segments:[{id,name}], rotation, usedIds:[], winner}
+
+  function shuffleArr(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp = a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+  function ideaPoolForWheel(){
+    return Object.keys(state.ideas).map(function(id){ return {id:id, name: state.ideas[id].name || 'Mystery dish'}; });
+  }
+  function openWheelOverlay(){ document.getElementById('wheelOverlay').style.display = 'flex'; }
+  function closeWheelOverlay(){ document.getElementById('wheelOverlay').style.display = 'none'; wheelState = null; }
+
+  function startWheel(dates){
+    dates = dates.filter(Boolean);
+    if(!dates.length) return;
+    var pool = ideaPoolForWheel();
+    if(pool.length === 0){
+      document.getElementById('wheelBody').innerHTML =
+        '<div class="sub" style="margin:10px 0;">Add a few meal ideas in 🍽️ Mains first, then come back and spin!</div>';
+      openWheelOverlay();
+      return;
+    }
+    var segments = shuffleArr(pool).slice(0, Math.min(MAX_WHEEL_SEGMENTS, pool.length));
+    wheelState = { queue: dates.slice(), segments: segments, rotation: 0, usedIds: [], winner: null };
+    renderWheelBody();
+    openWheelOverlay();
+  }
+
+  function renderWheelBody(){
+    if(!wheelState) return;
+    var dateStr = wheelState.queue[0];
+    var segs = wheelState.segments;
+    var n = segs.length;
+    var seg = 360 / n;
+
+    var gradientStops = segs.map(function(s, i){
+      var color = WHEEL_COLORS[i % WHEEL_COLORS.length];
+      return color + ' ' + (i*seg) + 'deg ' + ((i+1)*seg) + 'deg';
+    }).join(', ');
+
+    var labelsHtml = segs.map(function(s, i){
+      var mid = i*seg + seg/2;
+      var label = s.name.length > 16 ? s.name.slice(0,15) + '…' : s.name;
+      return '<div class="wheel-slice-label" style="transform:rotate('+mid+'deg) translateY(-92px);">' +
+        '<span style="transform:rotate('+(-mid)+'deg) translate(-50%,-4px);">'+escapeHtml(label)+'</span>' +
+      '</div>';
+    }).join('');
+
+    document.getElementById('wheelBody').innerHTML =
+      '<div class="wheel-for-date">🎲 What\'s for '+escapeHtml(dayLabel(dateStr))+'?</div>' +
+      '<div class="sub">'+(wheelState.queue.length > 1 ? (wheelState.queue.length)+' nights left to fill' : 'Spin to decide!')+'</div>' +
+      '<div class="wheel-outer">' +
+        '<div class="wheel-pointer"></div>' +
+        '<div class="wheel-disc" id="wheelDisc" style="background:conic-gradient('+gradientStops+'); transform:rotate('+wheelState.rotation+'deg);">'+labelsHtml+'</div>' +
+      '</div>' +
+      '<div class="wheel-result" id="wheelResult"></div>' +
+      '<button type="button" class="btn" id="spinWheelBtn">🎲 Spin!</button>' +
+      '<div id="wheelActions" style="display:none;margin-top:8px;">' +
+        '<button type="button" class="btn" id="wheelUseBtn">Use this!</button> ' +
+        '<button type="button" class="btn secondary" id="wheelAgainBtn">Spin again</button>' +
+      '</div>';
+
+    document.getElementById('spinWheelBtn').addEventListener('click', spinWheel);
+    document.getElementById('wheelUseBtn').addEventListener('click', useWheelResult);
+    document.getElementById('wheelAgainBtn').addEventListener('click', function(){
+      document.getElementById('wheelResult').textContent = '';
+      document.getElementById('wheelActions').style.display = 'none';
+      document.getElementById('spinWheelBtn').style.display = '';
+    });
+  }
+
+  function spinWheel(){
+    if(!wheelState) return;
+    var segs = wheelState.segments;
+    var n = segs.length;
+    var seg = 360 / n;
+
+    // avoid repeating a side/meal already used earlier in this session, unless we've used them all
+    var eligible = segs.map(function(s,i){ return i; }).filter(function(i){ return wheelState.usedIds.indexOf(segs[i].id) === -1; });
+    if(eligible.length === 0) eligible = segs.map(function(s,i){ return i; });
+
+    var winnerIdx = eligible[Math.floor(Math.random() * eligible.length)];
+    wheelState.winner = segs[winnerIdx];
+
+    var winnerMid = winnerIdx*seg + seg/2;
+    var currentMod = ((wheelState.rotation % 360) + 360) % 360;
+    var delta = (360 - winnerMid - currentMod + 360) % 360;
+    var extraSpins = 4 + Math.floor(Math.random()*3);
+    wheelState.rotation += extraSpins*360 + delta;
+
+    var spinBtn = document.getElementById('spinWheelBtn');
+    var disc = document.getElementById('wheelDisc');
+    if(!spinBtn || !disc) return;
+    spinBtn.style.display = 'none';
+    document.getElementById('wheelResult').textContent = '';
+    disc.style.transform = 'rotate('+wheelState.rotation+'deg)';
+
+    var revealed = false;
+    function reveal(){
+      if(revealed) return;
+      revealed = true;
+      var resultEl = document.getElementById('wheelResult');
+      var actionsEl = document.getElementById('wheelActions');
+      if(resultEl) resultEl.textContent = '🎉 ' + wheelState.winner.name + '!';
+      if(actionsEl) actionsEl.style.display = '';
+    }
+    disc.addEventListener('transitionend', function handler(){
+      disc.removeEventListener('transitionend', handler);
+      reveal();
+    });
+    setTimeout(reveal, 4400); // fallback in case the browser skips transitionend
+  }
+
+  function useWheelResult(){
+    if(!wheelState || !wheelState.winner) return;
+    var dateStr = wheelState.queue.shift();
+    wheelState.usedIds.push(wheelState.winner.id);
+    assignMeal(dateStr, wheelState.winner.id);
+    renderPlanner();
+    renderDashboard();
+    renderCalendar();
+    if(wheelState.queue.length){
+      renderWheelBody();
+    } else {
+      closeWheelOverlay();
+    }
+  }
+
+  document.getElementById('wheelCloseBtn').addEventListener('click', closeWheelOverlay);
+  document.getElementById('wheelOverlay').addEventListener('click', function(e){
+    if(e.target.id === 'wheelOverlay') closeWheelOverlay();
+  });
+  document.getElementById('wheelWeek1Btn').addEventListener('click', function(){
+    var empty = WEEK_DATES[1].filter(function(d){ return !state.meals[d] || !state.meals[d].ideaId; });
+    if(!empty.length){ window.alert('Every night this week already has something planned!'); return; }
+    startWheel(empty);
+  });
+  document.getElementById('wheelWeek2Btn').addEventListener('click', function(){
+    var empty = WEEK_DATES[2].filter(function(d){ return !state.meals[d] || !state.meals[d].ideaId; });
+    if(!empty.length){ window.alert('Every night next week already has something planned!'); return; }
+    startWheel(empty);
+  });
+
   // ---------- Render: Planner ----------
   function renderPlanner(){
     var el = document.getElementById('plannerGrid');
@@ -1461,7 +1665,9 @@
         : '';
 
       return '<div class="day-card" id="daycard-'+dateStr+'" data-day-date="'+dateStr+'">' +
-        '<div class="day-label">'+dayLabel(dateStr)+'</div>' +
+        '<div class="day-label">'+dayLabel(dateStr)+
+          '<button type="button" class="wheel-trigger" data-wheel-date="'+dateStr+'" title="Spin the wheel for this night">🎲</button>' +
+        '</div>' +
         '<select class="assign-select" data-date="'+dateStr+'">'+options+'</select>' +
         sourceHtml +
         backupHtml +
@@ -1495,6 +1701,11 @@
         renderPlanner();
         renderDashboard();
         renderCalendar();
+      });
+    });
+    el.querySelectorAll('[data-wheel-date]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        startWheel([btn.getAttribute('data-wheel-date')]);
       });
     });
 
