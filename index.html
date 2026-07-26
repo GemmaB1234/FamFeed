@@ -295,9 +295,9 @@
     display:inline-block; margin-top:8px; color:var(--muted); font-size:0.82rem; cursor:pointer; text-decoration:underline;
   }
   .side-row{
-    display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 12px; border-radius:10px;
-    background:#FAF9FC; margin-bottom:8px;
+    padding:10px 12px; border-radius:10px; background:#FAF9FC; margin-bottom:8px;
   }
+  .side-row-top{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
   .side-row-name{ font-weight:700; margin-right:auto; }
   .side-row-actions{ display:flex; gap:4px; }
   .side-select{ margin-top:8px; }
@@ -850,12 +850,15 @@
         return '<span class="meal-source">'+sourceLabel(l.type)+' — '+escapeHtml(l.note)+'</span>';
       }).join(' ');
       return '<div class="side-row" data-side-row="'+id+'">' +
-        '<div class="side-row-name">'+escapeHtml(side.name)+'</div>' +
-        (linksHtml ? '<div>'+linksHtml+'</div>' : '') +
-        '<div class="side-row-actions">' +
-          '<button type="button" class="edit-idea-btn" data-editside="'+id+'" title="Edit side">✏️</button>' +
-          '<button type="button" class="vote-btn del-idea" data-delside="'+id+'" title="Delete side">🗑️</button>' +
+        '<div class="side-row-top">' +
+          '<div class="side-row-name">'+escapeHtml(side.name)+'</div>' +
+          (linksHtml ? '<div>'+linksHtml+'</div>' : '') +
+          '<div class="side-row-actions">' +
+            '<button type="button" class="edit-idea-btn" data-editside="'+id+'" title="Edit side">✏️</button>' +
+            '<button type="button" class="vote-btn del-idea" data-delside="'+id+'" title="Delete side">🗑️</button>' +
+          '</div>' +
         '</div>' +
+        ingredientPanelHtml(id, side) +
       '</div>';
     }).join('');
     el.querySelectorAll('[data-editside]').forEach(function(btn){
@@ -873,6 +876,7 @@
         renderDashboard();
       });
     });
+    wireIngredientPanelEvents(el, renderSides);
   }
 
   // ---------- Ingredient pulling panels (per idea, client-side only) ----------
@@ -888,15 +892,18 @@
     if(!panel.pulls[linkIdx]) panel.pulls[linkIdx] = {status:'idle', ingredients:[], instructions:[]};
     return panel.pulls[linkIdx];
   }
-  function togglePanel(id){
+  // Ingredient-pulling is shared between "Can We Have?" ideas and Sides —
+  // each panel function takes a `render` callback so either renderVote()
+  // or renderSides() can drive its own re-render.
+  function togglePanel(id, render){
     var p = getPanel(id);
     p.open = !p.open;
-    renderVote();
+    render();
   }
-  function tryPullIngredients(id, linkIdx, url){
+  function tryPullIngredients(id, linkIdx, url, render){
     var pull = getPull(id, linkIdx);
     pull.status = 'loading';
-    renderVote();
+    render();
     fetch('/api/extract-recipe', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -911,11 +918,11 @@
       } else {
         pull.status = 'failed';
       }
-      renderVote();
+      render();
     })
     .catch(function(){
       pull.status = 'failed';
-      renderVote();
+      render();
     });
   }
   function parseIngredientLine(line){
@@ -923,30 +930,75 @@
     if(m && m[2]) return {qty: m[1].trim(), name: m[2].trim()};
     return {qty:'', name: line};
   }
-  function addPulledIngredientsToShoppingList(id, linkIdx){
+  function addPulledIngredientsToShoppingList(id, linkIdx, render){
     var panel = getPanel(id);
     var pull = getPull(id, linkIdx);
     var week = panel.week || 1;
     pull.ingredients.forEach(function(ing){
       if(!ing.checked) return;
       var parsed = parseIngredientLine(ing.text);
-      addShoppingItem(uid(), {name:parsed.name, qty:parsed.qty, category:'Other', week:week, checked:false});
+      addOrMergeShoppingItem({name:parsed.name, qty:parsed.qty, category:'Other', week:week, checked:false});
     });
-    renderVote();
+    render();
     renderShopping();
   }
-  function addManualIngredientsToShoppingList(id){
+  function addManualIngredientsToShoppingList(id, render){
     var p = getPanel(id);
     var week = p.week || 1;
     var lines = (p.manualText||'').split('\n').map(function(l){return l.trim();}).filter(Boolean);
     lines.forEach(function(line){
       var parsed = parseIngredientLine(line);
-      addShoppingItem(uid(), {name:parsed.name, qty:parsed.qty, category:'Other', week:week, checked:false});
+      addOrMergeShoppingItem({name:parsed.name, qty:parsed.qty, category:'Other', week:week, checked:false});
     });
     p.manualOpen = false;
     p.manualText = '';
-    renderVote();
+    render();
     renderShopping();
+  }
+  // Wires the ingredient-panel controls (toggle/pull/manual/checkboxes/week
+  // select) inside `el` — used by both renderVote() and renderSides().
+  function wireIngredientPanelEvents(el, render){
+    el.querySelectorAll('[data-toggle]').forEach(function(btn){
+      btn.addEventListener('click', function(){ togglePanel(btn.getAttribute('data-toggle'), render); });
+    });
+    el.querySelectorAll('[data-pull]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        tryPullIngredients(btn.getAttribute('data-pull'), btn.getAttribute('data-linkidx'), btn.getAttribute('data-url'), render);
+      });
+    });
+    el.querySelectorAll('[data-manualtoggle]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var p = getPanel(btn.getAttribute('data-manualtoggle'));
+        p.manualOpen = !p.manualOpen;
+        render();
+      });
+    });
+    el.querySelectorAll('[data-addpulled]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        addPulledIngredientsToShoppingList(btn.getAttribute('data-addpulled'), btn.getAttribute('data-linkidx'), render);
+      });
+    });
+    el.querySelectorAll('[data-addmanual]').forEach(function(btn){
+      btn.addEventListener('click', function(){ addManualIngredientsToShoppingList(btn.getAttribute('data-addmanual'), render); });
+    });
+    el.querySelectorAll('[data-ping]').forEach(function(cb){
+      cb.addEventListener('change', function(){
+        var pid = cb.getAttribute('data-ping');
+        var linkIdx = cb.getAttribute('data-linkidx');
+        var idx = parseInt(cb.getAttribute('data-idx'),10);
+        getPull(pid, linkIdx).ingredients[idx].checked = cb.checked;
+      });
+    });
+    el.querySelectorAll('[data-weeksel]').forEach(function(sel){
+      sel.addEventListener('change', function(){
+        getPanel(sel.getAttribute('data-weeksel')).week = parseInt(sel.value,10);
+      });
+    });
+    el.querySelectorAll('[data-manualtext]').forEach(function(ta){
+      ta.addEventListener('input', function(){
+        getPanel(ta.getAttribute('data-manualtext')).manualText = ta.value;
+      });
+    });
   }
 
   // ---------- Backend wiring: poll /api/state, POST /api/action ----------
@@ -1082,6 +1134,47 @@
   function addShoppingItem(id, item){
     state.shoppingList[id] = item;
     return sendAction({type:'addItem', id:id, item:item});
+  }
+  // Same as addShoppingItem, but if an unchecked item with the same name
+  // already exists that week, combines quantities into that row instead of
+  // adding a duplicate — e.g. "rice" needed for two different meals ends up
+  // as one line reading "200g + 100g" rather than two separate rows.
+  function normalizeItemName(name){
+    return (name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+  function findMergeableShoppingItem(name, week){
+    var norm = normalizeItemName(name);
+    if(!norm) return null;
+    var ids = Object.keys(state.shoppingList);
+    for(var i=0;i<ids.length;i++){
+      var it = state.shoppingList[ids[i]];
+      if(it.checked) continue;
+      if((it.week||1) !== week) continue;
+      if(normalizeItemName(it.name) === norm) return ids[i];
+    }
+    return null;
+  }
+  function combineQty(existingQty, newQty){
+    existingQty = (existingQty||'').trim();
+    newQty = (newQty||'').trim();
+    if(!existingQty) return newQty;
+    if(!newQty) return existingQty;
+    return existingQty + ' + ' + newQty;
+  }
+  function addOrMergeShoppingItem(item){
+    var week = item.week || 1;
+    var existingId = findMergeableShoppingItem(item.name, week);
+    if(existingId){
+      var existing = state.shoppingList[existingId];
+      return addShoppingItem(existingId, {
+        name: existing.name,
+        qty: combineQty(existing.qty, item.qty),
+        category: existing.category || item.category || 'Other',
+        checked: false,
+        week: week
+      });
+    }
+    return addShoppingItem(uid(), item);
   }
   function toggleShoppingItem(id, checked){
     if(state.shoppingList[id]) state.shoppingList[id].checked = checked;
@@ -1285,47 +1378,7 @@
         editIdea(btn.getAttribute('data-edit'));
       });
     });
-    el.querySelectorAll('[data-toggle]').forEach(function(btn){
-      btn.addEventListener('click', function(){ togglePanel(btn.getAttribute('data-toggle')); });
-    });
-    el.querySelectorAll('[data-pull]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        tryPullIngredients(btn.getAttribute('data-pull'), btn.getAttribute('data-linkidx'), btn.getAttribute('data-url'));
-      });
-    });
-    el.querySelectorAll('[data-manualtoggle]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        var p = getPanel(btn.getAttribute('data-manualtoggle'));
-        p.manualOpen = !p.manualOpen;
-        renderVote();
-      });
-    });
-    el.querySelectorAll('[data-addpulled]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        addPulledIngredientsToShoppingList(btn.getAttribute('data-addpulled'), btn.getAttribute('data-linkidx'));
-      });
-    });
-    el.querySelectorAll('[data-addmanual]').forEach(function(btn){
-      btn.addEventListener('click', function(){ addManualIngredientsToShoppingList(btn.getAttribute('data-addmanual')); });
-    });
-    el.querySelectorAll('[data-ping]').forEach(function(cb){
-      cb.addEventListener('change', function(){
-        var pid = cb.getAttribute('data-ping');
-        var linkIdx = cb.getAttribute('data-linkidx');
-        var idx = parseInt(cb.getAttribute('data-idx'),10);
-        getPull(pid, linkIdx).ingredients[idx].checked = cb.checked;
-      });
-    });
-    el.querySelectorAll('[data-weeksel]').forEach(function(sel){
-      sel.addEventListener('change', function(){
-        getPanel(sel.getAttribute('data-weeksel')).week = parseInt(sel.value,10);
-      });
-    });
-    el.querySelectorAll('[data-manualtext]').forEach(function(ta){
-      ta.addEventListener('input', function(){
-        getPanel(ta.getAttribute('data-manualtext')).manualText = ta.value;
-      });
-    });
+    wireIngredientPanelEvents(el, renderVote);
   }
 
   // ---------- Render: Planner ----------
@@ -1722,7 +1775,7 @@
     var qty = document.getElementById('itemQty').value.trim();
     var cat = document.getElementById('itemCat').value;
     var week = parseInt(document.getElementById('itemWeek').value, 10);
-    addShoppingItem(uid(), {name:name, qty:qty, category:cat, checked:false, week:week});
+    addOrMergeShoppingItem({name:name, qty:qty, category:cat, checked:false, week:week});
     document.getElementById('itemName').value = '';
     document.getElementById('itemQty').value = '';
     renderShopping();
