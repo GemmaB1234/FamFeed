@@ -35,14 +35,23 @@ module.exports = async (req, res) => {
         break;
       }
       case 'addIdea': {
+        // Also used to save edits to an existing idea (hset overwrites the field,
+        // votes live in a separate hash so they aren't touched either way).
         const { id, idea } = body;
         if (!id || !idea) throw new Error('id and idea required');
+        const links = Array.isArray(idea.links) && idea.links.length
+          ? idea.links.map((l) => ({ type: (l && l.type) || 'other', note: (l && l.note) || '' }))
+          : [{ type: idea.sourceType || 'other', note: idea.sourceNote || '' }];
+        const primary = links[0];
         await kv.hset('ideas', {
           [id]: JSON.stringify({
             name: idea.name || '',
             category: idea.category === 'safe' ? 'safe' : 'new',
-            sourceType: idea.sourceType || 'other',
-            sourceNote: idea.sourceNote || '',
+            links: links,
+            // kept in sync with links[0] so meal snapshots (assignMeal/setMealBackup)
+            // and older clients that only know about a single link keep working.
+            sourceType: primary.type,
+            sourceNote: primary.note,
             protein: idea.protein || 'other',
             effort: idea.effort || 'medium',
             cuisine: idea.cuisine || 'other',
@@ -108,6 +117,20 @@ module.exports = async (req, res) => {
         await kv.hset('meals', { [date]: JSON.stringify(existing) });
         break;
       }
+      case 'setMealSide': {
+        const { date, sideId } = body;
+        if (!date) throw new Error('date required');
+        const [existingRaw, sideRaw] = await Promise.all([
+          kv.hget('meals', date),
+          sideId ? kv.hget('sides', sideId) : Promise.resolve(null),
+        ]);
+        const existing = safeParse(existingRaw, { name: '', category: 'new', sourceType: 'other', sourceNote: '' });
+        const side = sideId ? safeParse(sideRaw, null) : null;
+        existing.sideId = sideId || '';
+        existing.sideName = side ? side.name : '';
+        await kv.hset('meals', { [date]: JSON.stringify(existing) });
+        break;
+      }
       case 'addSafeFood': {
         const { id, name } = body;
         if (!id || !name) throw new Error('id and name required');
@@ -118,6 +141,24 @@ module.exports = async (req, res) => {
         const { id } = body;
         if (!id) throw new Error('id required');
         await kv.hdel('safeFoods', id);
+        break;
+      }
+      case 'addSide': {
+        // Also used to save edits to an existing side (hset overwrites the field).
+        const { id, side } = body;
+        if (!id || !side) throw new Error('id and side required');
+        const links = Array.isArray(side.links) && side.links.length
+          ? side.links.map((l) => ({ type: (l && l.type) || 'other', note: (l && l.note) || '' }))
+          : [{ type: 'other', note: '' }];
+        await kv.hset('sides', {
+          [id]: JSON.stringify({ name: side.name || '', links }),
+        });
+        break;
+      }
+      case 'removeSide': {
+        const { id } = body;
+        if (!id) throw new Error('id required');
+        await kv.hdel('sides', id);
         break;
       }
       case 'addItem': {

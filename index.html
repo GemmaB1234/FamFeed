@@ -226,9 +226,17 @@
     font-size:0.6rem; margin-top:1px; padding:1px 4px; border-radius:5px; box-sizing:border-box;
     background:#FFF6D9; color:#946200; width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
+  .cal-side{
+    font-size:0.6rem; margin-top:1px; padding:1px 4px; border-radius:5px; box-sizing:border-box;
+    background:#E8F9F5; color:var(--teal); width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
   .backup-badge{
     display:inline-flex; align-items:center; gap:4px; margin-top:6px;
     font-size:0.8rem; padding:3px 10px; border-radius:999px; background:#FFF6D9; color:#946200;
+  }
+  .side-badge{
+    display:inline-flex; align-items:center; gap:4px; margin-top:6px; margin-left:6px;
+    font-size:0.8rem; padding:3px 10px; border-radius:999px; background:#E8F9F5; color:var(--teal);
   }
   .backup-select{ margin-top:8px; }
 
@@ -273,6 +281,26 @@
     padding:8px 10px; border-radius:10px; border:1px solid #EEE3F5; font-size:0.85rem;
   }
   .source-note{ flex:1; min-width:140px; }
+  .idea-link-row{ display:flex; gap:8px; width:100%; margin-bottom:6px; align-items:center; }
+  .idea-link-row select{ flex:1; min-width:0; }
+  .idea-link-row input[type=text]{ flex:2; min-width:0; }
+  .idea-link-row .rmLinkBtn{
+    background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; padding:2px 6px; line-height:1;
+  }
+  .link-row-btn{ margin:0 0 10px; }
+  .edit-idea-btn{
+    border:2px solid transparent; background:#F6F5FA; border-radius:10px; padding:0 12px; font-size:1rem; cursor:pointer;
+  }
+  .delete-idea-link{
+    display:inline-block; margin-top:8px; color:var(--muted); font-size:0.82rem; cursor:pointer; text-decoration:underline;
+  }
+  .side-row{
+    display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 12px; border-radius:10px;
+    background:#FAF9FC; margin-bottom:8px;
+  }
+  .side-row-name{ font-weight:700; margin-right:auto; }
+  .side-row-actions{ display:flex; gap:4px; }
+  .side-select{ margin-top:8px; }
 
   /* Shopping list */
   .add-item-form{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
@@ -358,17 +386,8 @@
           <option value="new">🎉 Something new</option>
           <option value="safe">😌 Old faithful (safe bet)</option>
         </select>
-        <select id="ideaSourceType">
-          <option value="cookbook">📖 Cookbook</option>
-          <option value="tiktok">📱 TikTok</option>
-          <option value="instagram">📸 Instagram</option>
-          <option value="facebook">👍 Facebook</option>
-          <option value="pinterest">📌 Pinterest</option>
-          <option value="website">🌐 Website/Blog</option>
-          <option value="family">👵 Family recipe</option>
-          <option value="other" selected>📝 Other</option>
-        </select>
-        <input type="text" id="ideaSourceNote" placeholder="link / note (optional)">
+        <div id="ideaLinksRows" style="width:100%;"></div>
+        <button type="button" class="btn secondary link-row-btn" id="addLinkRowBtn">+ Add another link</button>
         <select id="ideaProtein">
           <option value="chicken">🍗 Chicken</option>
           <option value="beef">🐄 Beef</option>
@@ -395,6 +414,10 @@
           <option value="other" selected>🌍 Other</option>
         </select>
         <button class="btn" id="addIdeaBtn">Suggest it</button>
+        <button type="button" class="btn secondary" id="cancelEditBtn" style="display:none;">Cancel edit</button>
+      </div>
+      <div id="deleteIdeaWrap" style="display:none;">
+        <a class="delete-idea-link" id="deleteIdeaLink">🗑️ Delete this suggestion</a>
       </div>
     </div>
     <div class="card" style="padding:10px 14px;">
@@ -526,6 +549,18 @@
       </div>
       <div id="safeFoodChips" style="margin-top:12px;"></div>
     </div>
+    <div class="card">
+      <h2>🍚 Sides library</h2>
+      <div class="sub">Go-to sides that pair with lots of different mains — egg fried rice, garlic bread, whatever. Add each one once with its link, then attach it to as many nights as you like from the Planner.</div>
+      <div class="add-item-form" id="sideForm">
+        <input type="text" id="sideName" placeholder="e.g. Egg fried rice">
+        <div id="sideLinksRows" style="width:100%;"></div>
+        <button type="button" class="btn secondary link-row-btn" id="addSideLinkRowBtn">+ Add another link</button>
+        <button class="btn" id="addSideBtn">Add side</button>
+        <button type="button" class="btn secondary" id="cancelSideEditBtn" style="display:none;">Cancel edit</button>
+      </div>
+      <div id="sidesList" style="margin-top:12px;"></div>
+    </div>
   </section>
 </main>
 
@@ -551,7 +586,8 @@
     meals: {},          // dateStr -> {ideaId, name, sourceType, sourceNote, backupFood}  (assigned plan snapshot)
     shoppingList: {},   // id -> {name, qty, category, checked, week}
     archivedLists: {},  // id -> {archivedAt, label, items:[{name,qty,category,checked}]}
-    safeFoods: {}        // id -> name  (fussy-eater backup foods)
+    safeFoods: {},       // id -> name  (fussy-eater backup foods)
+    sides: {}            // id -> {name, links:[{type,note}]}  (reusable side dishes, attachable to any day)
   };
 
   function tallyOf(idea){
@@ -606,6 +642,18 @@
   function sourceLabel(key){
     var s = SOURCE_TYPES.find(function(x){return x.key===key;});
     return s ? s.label : '📝 Other';
+  }
+  // An idea can have more than one link (e.g. main dish + a side). Older
+  // saved ideas only have a single sourceType/sourceNote — fall back to that.
+  function linksOf(idea){
+    if(idea && Array.isArray(idea.links) && idea.links.length) return idea.links;
+    if(idea && (idea.sourceType || idea.sourceNote)) return [{type: idea.sourceType || 'other', note: idea.sourceNote || ''}];
+    return [{type:'other', note:''}];
+  }
+  function sourceTypeOptionsHtml(selected){
+    return SOURCE_TYPES.map(function(s){
+      return '<option value="'+s.key+'"'+(s.key===selected?' selected':'')+'>'+s.label+'</option>';
+    }).join('');
   }
 
   var VOTE_OPTIONS = [
@@ -669,22 +717,185 @@
   var effortFilter = '';
   var cuisineFilter = '';
 
+  // ---------- Add/edit idea form: link rows ----------
+  // null = form is in "add new" mode; otherwise the id of the idea being edited.
+  var editingIdeaId = null;
+
+  function renderLinkRows(links){
+    renderLinkRowsInto('ideaLinksRows', links);
+  }
+  // Generic link-row widget, reused by both the recipe-idea form and the
+  // sides-library form (containerId is the id of the wrapping <div>).
+  function renderLinkRowsInto(containerId, links){
+    var rows = (links && links.length ? links : [{type:'other', note:''}]);
+    var wrap = document.getElementById(containerId);
+    wrap.innerHTML = rows.map(function(link, idx){
+      return '<div class="idea-link-row" data-linkrow="'+idx+'">' +
+        '<select class="ideaLinkType">'+sourceTypeOptionsHtml(link.type||'other')+'</select>' +
+        '<input type="text" class="ideaLinkNote" placeholder="link / note (optional)" value="'+escapeHtml(link.note||'')+'">' +
+        (rows.length > 1 ? '<button type="button" class="rmLinkBtn" title="Remove this link">✕</button>' : '') +
+      '</div>';
+    }).join('');
+    wireLinkRowRemovers(wrap);
+  }
+  function wireLinkRowRemovers(wrap){
+    wrap.querySelectorAll('.rmLinkBtn').forEach(function(btn){
+      btn.onclick = function(){
+        btn.closest('.idea-link-row').remove();
+        // if only one row is left, drop its remove button
+        var remaining = wrap.querySelectorAll('.idea-link-row');
+        if(remaining.length === 1){
+          var rm = remaining[0].querySelector('.rmLinkBtn');
+          if(rm) rm.remove();
+        }
+      };
+    });
+  }
+  function addLinkRow(){ addLinkRowInto('ideaLinksRows'); }
+  function addLinkRowInto(containerId){
+    var wrap = document.getElementById(containerId);
+    var idx = wrap.querySelectorAll('.idea-link-row').length;
+    var row = document.createElement('div');
+    row.className = 'idea-link-row';
+    row.setAttribute('data-linkrow', idx);
+    row.innerHTML = '<select class="ideaLinkType">'+sourceTypeOptionsHtml('other')+'</select>' +
+      '<input type="text" class="ideaLinkNote" placeholder="link / note (optional)">' +
+      '<button type="button" class="rmLinkBtn" title="Remove this link">✕</button>';
+    wrap.appendChild(row);
+    // now that there's more than one row, make sure the first row also has a remove button
+    var first = wrap.querySelector('.idea-link-row');
+    if(first && !first.querySelector('.rmLinkBtn')){
+      var rm = document.createElement('button');
+      rm.type = 'button'; rm.className = 'rmLinkBtn'; rm.title = 'Remove this link'; rm.textContent = '✕';
+      first.appendChild(rm);
+    }
+    wireLinkRowRemovers(wrap);
+  }
+  function readLinksFromForm(){ return readLinksFromFormIn('ideaLinksRows'); }
+  function readLinksFromFormIn(containerId){
+    var rows = document.querySelectorAll('#'+containerId+' .idea-link-row');
+    var links = [];
+    rows.forEach(function(row){
+      var type = row.querySelector('.ideaLinkType').value;
+      var note = row.querySelector('.ideaLinkNote').value.trim();
+      links.push({type:type, note:note});
+    });
+    // drop trailing empty rows beyond the first one (e.g. an unused "+ Add another link" row)
+    while(links.length > 1){
+      var last = links[links.length-1];
+      if(last.note === '' && last.type === 'other') links.pop(); else break;
+    }
+    return links;
+  }
+  function resetIdeaForm(){
+    editingIdeaId = null;
+    document.getElementById('ideaName').value = '';
+    document.getElementById('ideaCategory').value = 'new';
+    document.getElementById('ideaProtein').value = 'other';
+    document.getElementById('ideaEffort').value = 'medium';
+    document.getElementById('ideaCuisine').value = 'other';
+    renderLinkRows([{type:'other', note:''}]);
+    document.getElementById('addIdeaBtn').textContent = 'Suggest it';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+    document.getElementById('deleteIdeaWrap').style.display = 'none';
+  }
+  function editIdea(id){
+    var idea = state.ideas[id];
+    if(!idea) return;
+    editingIdeaId = id;
+    document.getElementById('ideaName').value = idea.name || '';
+    document.getElementById('ideaCategory').value = categoryOf(idea);
+    document.getElementById('ideaProtein').value = proteinOf(idea);
+    document.getElementById('ideaEffort').value = effortOf(idea);
+    document.getElementById('ideaCuisine').value = cuisineOf(idea);
+    renderLinkRows(linksOf(idea));
+    document.getElementById('addIdeaBtn').textContent = 'Save changes';
+    document.getElementById('cancelEditBtn').style.display = '';
+    document.getElementById('deleteIdeaWrap').style.display = '';
+    var formCard = document.querySelector('#view-vote .card');
+    if(formCard && formCard.scrollIntoView) formCard.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  // ---------- Sides library (reusable across many meals) ----------
+  var editingSideId = null;
+  function sidesOf(side){ return (side && Array.isArray(side.links) && side.links.length) ? side.links : [{type:'other', note:''}]; }
+  function resetSideForm(){
+    editingSideId = null;
+    document.getElementById('sideName').value = '';
+    renderLinkRowsInto('sideLinksRows', [{type:'other', note:''}]);
+    document.getElementById('addSideBtn').textContent = 'Add side';
+    document.getElementById('cancelSideEditBtn').style.display = 'none';
+  }
+  function editSide(id){
+    var side = state.sides[id];
+    if(!side) return;
+    editingSideId = id;
+    document.getElementById('sideName').value = side.name || '';
+    renderLinkRowsInto('sideLinksRows', sidesOf(side));
+    document.getElementById('addSideBtn').textContent = 'Save changes';
+    document.getElementById('cancelSideEditBtn').style.display = '';
+  }
+  function renderSides(){
+    var el = document.getElementById('sidesList');
+    if(!el) return;
+    if(isFocusWithin(document.getElementById('sideForm'))) return;
+    var ids = Object.keys(state.sides || {});
+    if(ids.length === 0){
+      el.innerHTML = '<div class="sub" style="margin-top:8px;">No sides added yet — things like egg fried rice or garlic bread that go with lots of different mains.</div>';
+      return;
+    }
+    el.innerHTML = ids.map(function(id){
+      var side = state.sides[id];
+      var linksHtml = sidesOf(side).filter(function(l){ return l.note; }).map(function(l){
+        return '<span class="meal-source">'+sourceLabel(l.type)+' — '+escapeHtml(l.note)+'</span>';
+      }).join(' ');
+      return '<div class="side-row" data-side-row="'+id+'">' +
+        '<div class="side-row-name">'+escapeHtml(side.name)+'</div>' +
+        (linksHtml ? '<div>'+linksHtml+'</div>' : '') +
+        '<div class="side-row-actions">' +
+          '<button type="button" class="edit-idea-btn" data-editside="'+id+'" title="Edit side">✏️</button>' +
+          '<button type="button" class="vote-btn del-idea" data-delside="'+id+'" title="Delete side">🗑️</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    el.querySelectorAll('[data-editside]').forEach(function(btn){
+      btn.addEventListener('click', function(){ editSide(btn.getAttribute('data-editside')); });
+    });
+    el.querySelectorAll('[data-delside]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-delside');
+        if(!window.confirm('Delete this side for everyone?')) return;
+        removeSide(id);
+        if(editingSideId === id) resetSideForm();
+        renderSides();
+        renderPlanner();
+        renderCalendar();
+        renderDashboard();
+      });
+    });
+  }
+
   // ---------- Ingredient pulling panels (per idea, client-side only) ----------
-  // ideaId -> {open, status:'idle'|'loading'|'success'|'failed', ingredients:[{text,checked}], instructions:[], manualText:'', week:1}
+  // ideaId -> {open, manualOpen, manualText:'', week:1, pulls:{linkIdx: {status, ingredients:[{text,checked}], instructions:[]}}}
   var ideaPanels = {};
 
   function getPanel(id){
-    if(!ideaPanels[id]) ideaPanels[id] = {open:false, status:'idle', ingredients:[], instructions:[], manualText:'', week:1};
+    if(!ideaPanels[id]) ideaPanels[id] = {open:false, manualOpen:false, manualText:'', week:1, pulls:{}};
     return ideaPanels[id];
+  }
+  function getPull(id, linkIdx){
+    var panel = getPanel(id);
+    if(!panel.pulls[linkIdx]) panel.pulls[linkIdx] = {status:'idle', ingredients:[], instructions:[]};
+    return panel.pulls[linkIdx];
   }
   function togglePanel(id){
     var p = getPanel(id);
     p.open = !p.open;
     renderVote();
   }
-  function tryPullIngredients(id, url){
-    var p = getPanel(id);
-    p.status = 'loading';
+  function tryPullIngredients(id, linkIdx, url){
+    var pull = getPull(id, linkIdx);
+    pull.status = 'loading';
     renderVote();
     fetch('/api/extract-recipe', {
       method:'POST',
@@ -694,16 +905,16 @@
     .then(function(r){ return r.json(); })
     .then(function(data){
       if(data && data.ok && data.ingredients && data.ingredients.length){
-        p.status = 'success';
-        p.ingredients = data.ingredients.map(function(t){ return {text:t, checked:true}; });
-        p.instructions = data.instructions || [];
+        pull.status = 'success';
+        pull.ingredients = data.ingredients.map(function(t){ return {text:t, checked:true}; });
+        pull.instructions = data.instructions || [];
       } else {
-        p.status = 'failed';
+        pull.status = 'failed';
       }
       renderVote();
     })
     .catch(function(){
-      p.status = 'failed';
+      pull.status = 'failed';
       renderVote();
     });
   }
@@ -712,15 +923,15 @@
     if(m && m[2]) return {qty: m[1].trim(), name: m[2].trim()};
     return {qty:'', name: line};
   }
-  function addPulledIngredientsToShoppingList(id){
-    var p = getPanel(id);
-    var week = p.week || 1;
-    p.ingredients.forEach(function(ing){
+  function addPulledIngredientsToShoppingList(id, linkIdx){
+    var panel = getPanel(id);
+    var pull = getPull(id, linkIdx);
+    var week = panel.week || 1;
+    pull.ingredients.forEach(function(ing){
       if(!ing.checked) return;
       var parsed = parseIngredientLine(ing.text);
       addShoppingItem(uid(), {name:parsed.name, qty:parsed.qty, category:'Other', week:week, checked:false});
     });
-    p.open = false;
     renderVote();
     renderShopping();
   }
@@ -732,7 +943,7 @@
       var parsed = parseIngredientLine(line);
       addShoppingItem(uid(), {name:parsed.name, qty:parsed.qty, category:'Other', week:week, checked:false});
     });
-    p.open = false;
+    p.manualOpen = false;
     p.manualText = '';
     renderVote();
     renderShopping();
@@ -761,6 +972,7 @@
         state.shoppingList = data.shoppingList || {};
         state.archivedLists = data.archivedLists || {};
         state.safeFoods = data.safeFoods || {};
+        state.sides = data.sides || {};
         renderAll();
       })
       .catch(function(err){ console.error('Fam Feed: failed to load state', err); });
@@ -810,7 +1022,9 @@
     return sendAction({type:'removeMember', id:id});
   }
   function addIdea(id, idea){
-    state.ideas[id] = Object.assign({votes:{}}, idea);
+    // also used to save edits — keep existing votes intact in the optimistic update
+    var existingVotes = (state.ideas[id] && state.ideas[id].votes) || {};
+    state.ideas[id] = Object.assign({votes:existingVotes}, idea);
     return sendAction({type:'addIdea', id:id, idea:idea});
   }
   function removeIdea(id){
@@ -842,6 +1056,13 @@
     state.meals[dateStr].backupFood = backupFood;
     return sendAction({type:'setMealBackup', date:dateStr, backupFood:backupFood});
   }
+  function setMealSide(dateStr, sideId){
+    if(!state.meals[dateStr]) state.meals[dateStr] = {name:'', sourceType:'other', sourceNote:'', category:'new'};
+    var side = sideId ? state.sides[sideId] : null;
+    state.meals[dateStr].sideId = sideId || '';
+    state.meals[dateStr].sideName = side ? side.name : '';
+    return sendAction({type:'setMealSide', date:dateStr, sideId:sideId || ''});
+  }
   function addSafeFood(id, name){
     state.safeFoods[id] = name;
     return sendAction({type:'addSafeFood', id:id, name:name});
@@ -849,6 +1070,14 @@
   function removeSafeFood(id){
     delete state.safeFoods[id];
     return sendAction({type:'removeSafeFood', id:id});
+  }
+  function addSide(id, side){
+    state.sides[id] = Object.assign({}, side);
+    return sendAction({type:'addSide', id:id, side:side});
+  }
+  function removeSide(id){
+    delete state.sides[id];
+    return sendAction({type:'removeSide', id:id});
   }
   function addShoppingItem(id, item){
     state.shoppingList[id] = item;
@@ -933,33 +1162,48 @@
       weekSelectHtml(id, panel) +
       '<button class="btn" data-addmanual="'+id+'">Add to shopping list</button>';
   }
+  // A recipe idea can have several links (main dish + a side, say) — each gets
+  // its own auto-pull attempt/result, plus one shared manual-paste fallback.
+  function linkPullSectionHtml(id, idx, link, multiple){
+    var pull = getPull(id, idx);
+    var label = multiple ? '<div class="sub" style="margin:10px 0 2px;font-weight:700;">'+sourceLabel(link.type)+(link.note ? ' — '+escapeHtml(link.note) : '')+'</div>' : '';
+    var body = '';
+    if(pull.status === 'idle'){
+      body = '<button class="btn" data-pull="'+id+'" data-linkidx="'+idx+'" data-url="'+escapeHtml(link.note.trim())+'">🔍 Try pulling ingredients from this link</button>';
+    } else if(pull.status === 'loading'){
+      body = '<span class="empty-hint">Reading the recipe…</span>';
+    } else if(pull.status === 'success'){
+      body = '<div class="sub" style="margin:0 0 4px;">Found '+pull.ingredients.length+' ingredients — untick anything you don\'t need:</div>' +
+        pull.ingredients.map(function(ing, iidx){
+          return '<label class="ingredient-line"><input type="checkbox" data-ping="'+id+'" data-linkidx="'+idx+'" data-idx="'+iidx+'" '+(ing.checked?'checked':'')+'>'+escapeHtml(ing.text)+'</label>';
+        }).join('') +
+        (pull.instructions && pull.instructions.length ? '<div class="sub" style="margin-top:10px;">📋 Method:</div><ol style="font-size:0.85rem;color:var(--muted);padding-left:20px;">'+
+          pull.instructions.map(function(step){ return '<li>'+escapeHtml(step)+'</li>'; }).join('')+'</ol>' : '') +
+        weekSelectHtml(id, getPanel(id)) +
+        '<button class="btn" data-addpulled="'+id+'" data-linkidx="'+idx+'">Add ticked to shopping list</button>';
+    } else if(pull.status === 'failed'){
+      body = '<div class="sub" style="margin:0 0 4px;">Couldn\'t auto-read that link — try pasting the ingredients below instead.</div>';
+    }
+    return label + body;
+  }
   function ingredientPanelHtml(id, idea){
     var panel = getPanel(id);
     var toggleBtn = '<button class="btn secondary" data-toggle="'+id+'" style="margin-top:10px;">🧾 '+(panel.open?'Hide ingredients':'Ingredients')+'</button>';
     if(!panel.open) return toggleBtn;
 
-    var hasUrl = idea.sourceNote && /^https?:\/\//i.test(idea.sourceNote.trim());
-    var body = '';
-    if(panel.status === 'idle'){
-      body = hasUrl
-        ? '<button class="btn" data-pull="'+id+'" data-url="'+escapeHtml(idea.sourceNote.trim())+'">🔍 Try pulling ingredients from the link</button> ' +
-          '<button class="btn secondary" data-manual="'+id+'">✍️ I\'ll paste them myself</button>'
-        : '<div class="sub" style="margin:0 0 4px;">No link saved for this one — paste the ingredients below:</div>' + manualBoxHtml(id, panel);
-    } else if(panel.status === 'loading'){
-      body = '<span class="empty-hint">Reading the recipe…</span>';
-    } else if(panel.status === 'success'){
-      body = '<div class="sub" style="margin:0 0 4px;">Found '+panel.ingredients.length+' ingredients — untick anything you don\'t need:</div>' +
-        panel.ingredients.map(function(ing, idx){
-          return '<label class="ingredient-line"><input type="checkbox" data-ping="'+id+'" data-idx="'+idx+'" '+(ing.checked?'checked':'')+'>'+escapeHtml(ing.text)+'</label>';
-        }).join('') +
-        (panel.instructions && panel.instructions.length ? '<div class="sub" style="margin-top:10px;">📋 Method:</div><ol style="font-size:0.85rem;color:var(--muted);padding-left:20px;">'+
-          panel.instructions.map(function(step){ return '<li>'+escapeHtml(step)+'</li>'; }).join('')+'</ol>' : '') +
-        weekSelectHtml(id, panel) +
-        '<button class="btn" data-addpulled="'+id+'">Add ticked to shopping list</button>';
-    } else if(panel.status === 'failed'){
-      body = '<div class="sub" style="margin:0 0 4px;">Couldn\'t auto-read ingredients from that link — paste them below instead:</div>' + manualBoxHtml(id, panel);
-    }
-    return toggleBtn + '<div class="ingredient-panel">' + body + '</div>';
+    var links = linksOf(idea);
+    var urlLinks = links.filter(function(l){ return l.note && /^https?:\/\//i.test(l.note.trim()); });
+    var multiple = urlLinks.length > 1;
+    var pullSections = urlLinks.map(function(link){
+      var idx = links.indexOf(link);
+      return linkPullSectionHtml(id, idx, link, multiple);
+    }).join('');
+
+    var noLinksHint = urlLinks.length ? '' : '<div class="sub" style="margin:0 0 4px;">No links saved for this one.</div>';
+    var manualToggleBtn = '<button class="btn secondary" data-manualtoggle="'+id+'" style="margin-top:10px;">✍️ '+(panel.manualOpen?'Hide paste box':'Paste ingredients myself')+'</button>';
+    var manualSection = panel.manualOpen ? '<div style="margin-top:6px;">'+manualBoxHtml(id, panel)+'</div>' : '';
+
+    return toggleBtn + '<div class="ingredient-panel">' + noLinksHint + pullSections + manualToggleBtn + manualSection + '</div>';
   }
 
   // ---------- Render: Vote ("Can We Have?") ----------
@@ -1003,8 +1247,9 @@
         return '<button class="vote-btn'+sel+'" data-id="'+id+'" data-choice="'+opt.key+'" '+(me?'':'disabled')+'>'+opt.emoji+'</button>';
       }).join('');
 
-      var sourceHtml = '<span class="meal-source">'+sourceLabel(idea.sourceType)+
-        (idea.sourceNote ? ' — '+escapeHtml(idea.sourceNote) : '')+'</span>';
+      var sourceHtml = linksOf(idea).map(function(link){
+        return '<span class="meal-source">'+sourceLabel(link.type)+(link.note ? ' — '+escapeHtml(link.note) : '')+'</span>';
+      }).join(' ');
       var tagsHtml = tagPill(PROTEIN_TYPES, proteinOf(idea)) + tagPill(EFFORT_LEVELS, effortOf(idea)) + tagPill(CUISINE_TYPES, cuisineOf(idea));
 
       return '<div class="card">' +
@@ -1015,7 +1260,7 @@
             '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>' +
           '</div>' +
           '<div class="vote-buttons">'+buttons+
-            '<button class="vote-btn del-idea" data-del="'+id+'" title="Remove suggestion">🗑️</button>' +
+            '<button class="vote-btn edit-idea-btn" data-edit="'+id+'" title="Edit suggestion">✏️</button>' +
           '</div>' +
         '</div>' +
         ingredientPanelHtml(id, idea) +
@@ -1035,13 +1280,9 @@
         renderDashboard();
       });
     });
-    el.querySelectorAll('[data-del]').forEach(function(btn){
+    el.querySelectorAll('[data-edit]').forEach(function(btn){
       btn.addEventListener('click', function(){
-        var id = btn.getAttribute('data-del');
-        removeIdea(id);
-        renderVote();
-        renderPlanner();
-        renderDashboard();
+        editIdea(btn.getAttribute('data-edit'));
       });
     });
     el.querySelectorAll('[data-toggle]').forEach(function(btn){
@@ -1049,17 +1290,20 @@
     });
     el.querySelectorAll('[data-pull]').forEach(function(btn){
       btn.addEventListener('click', function(){
-        tryPullIngredients(btn.getAttribute('data-pull'), btn.getAttribute('data-url'));
+        tryPullIngredients(btn.getAttribute('data-pull'), btn.getAttribute('data-linkidx'), btn.getAttribute('data-url'));
       });
     });
-    el.querySelectorAll('[data-manual]').forEach(function(btn){
+    el.querySelectorAll('[data-manualtoggle]').forEach(function(btn){
       btn.addEventListener('click', function(){
-        getPanel(btn.getAttribute('data-manual')).status = 'failed';
+        var p = getPanel(btn.getAttribute('data-manualtoggle'));
+        p.manualOpen = !p.manualOpen;
         renderVote();
       });
     });
     el.querySelectorAll('[data-addpulled]').forEach(function(btn){
-      btn.addEventListener('click', function(){ addPulledIngredientsToShoppingList(btn.getAttribute('data-addpulled')); });
+      btn.addEventListener('click', function(){
+        addPulledIngredientsToShoppingList(btn.getAttribute('data-addpulled'), btn.getAttribute('data-linkidx'));
+      });
     });
     el.querySelectorAll('[data-addmanual]').forEach(function(btn){
       btn.addEventListener('click', function(){ addManualIngredientsToShoppingList(btn.getAttribute('data-addmanual')); });
@@ -1067,8 +1311,9 @@
     el.querySelectorAll('[data-ping]').forEach(function(cb){
       cb.addEventListener('change', function(){
         var pid = cb.getAttribute('data-ping');
+        var linkIdx = cb.getAttribute('data-linkidx');
         var idx = parseInt(cb.getAttribute('data-idx'),10);
-        getPanel(pid).ingredients[idx].checked = cb.checked;
+        getPull(pid, linkIdx).ingredients[idx].checked = cb.checked;
       });
     });
     el.querySelectorAll('[data-weeksel]').forEach(function(sel){
@@ -1113,11 +1358,23 @@
           '<select class="assign-select backup-select" data-backup-date="'+dateStr+'">'+backupOptions+'</select>'
         : '';
 
+      var sideIds = Object.keys(state.sides || {});
+      var currentSideId = meal ? (meal.sideId || '') : '';
+      var sideOptions = '<option value="">— no side —</option>' + sideIds.map(function(id){
+        var s = state.sides[id];
+        return '<option value="'+id+'"'+(currentSideId===id?' selected':'')+'>'+escapeHtml(s.name)+'</option>';
+      }).join('');
+      var sideHtml = sideIds.length
+        ? '<div class="sub" style="margin:8px 0 2px;">🍚 Side dish:</div>' +
+          '<select class="assign-select side-select" data-side-date="'+dateStr+'">'+sideOptions+'</select>'
+        : '';
+
       return '<div class="day-card" id="daycard-'+dateStr+'" data-day-date="'+dateStr+'">' +
         '<div class="day-label">'+dayLabel(dateStr)+'</div>' +
         '<select class="assign-select" data-date="'+dateStr+'">'+options+'</select>' +
         sourceHtml +
         backupHtml +
+        sideHtml +
       '</div>';
     }).join('');
 
@@ -1134,6 +1391,15 @@
       sel.addEventListener('change', function(){
         var dateStr = sel.getAttribute('data-backup-date');
         setMealBackup(dateStr, sel.value || '');
+        renderPlanner();
+        renderDashboard();
+        renderCalendar();
+      });
+    });
+    el.querySelectorAll('[data-side-date]').forEach(function(sel){
+      sel.addEventListener('change', function(){
+        var dateStr = sel.getAttribute('data-side-date');
+        setMealSide(dateStr, sel.value || '');
         renderPlanner();
         renderDashboard();
         renderCalendar();
@@ -1159,8 +1425,9 @@
         ? '<div class="cal-meal '+categoryOf(meal)+'">'+escapeHtml(meal.name)+'</div>'
         : '<div class="cal-meal empty-slot">—</div>';
       var backupHtml = (meal && meal.backupFood) ? '<div class="cal-backup">🆘 '+escapeHtml(meal.backupFood)+'</div>' : '';
+      var sideHtml = (meal && meal.sideName) ? '<div class="cal-side">🍚 '+escapeHtml(meal.sideName)+'</div>' : '';
       html += '<div class="cal-cell'+(dateStr===todayStr?' today':'')+'" data-jump="'+dateStr+'">' +
-        '<div class="cal-daynum">'+dt.getDate()+'</div>' + mealHtml + backupHtml +
+        '<div class="cal-daynum">'+dt.getDate()+'</div>' + mealHtml + sideHtml + backupHtml +
       '</div>';
     });
     el.innerHTML = html;
@@ -1300,6 +1567,7 @@
         '<div class="meal-name">'+escapeHtml(meal.name)+flag+removedNote+'</div>' +
         categoryBadge(meal) +
         (meal.backupFood ? '<span class="backup-badge">🆘 '+escapeHtml(meal.backupFood)+'</span>' : '') +
+        (meal.sideName ? '<span class="side-badge">🍚 '+escapeHtml(meal.sideName)+'</span>' : '') +
         '<div class="bar-row"><div class="bar">' +
           '<span style="width:'+pct(tally.yum)+'%;background:var(--yum)"></span>' +
           '<span style="width:'+pct(tally.meh)+'%;background:var(--meh)"></span>' +
@@ -1367,6 +1635,7 @@
     renderDashboard();
     renderHousehold();
     renderSafeFoods();
+    renderSides();
   }
 
   // ---------- Tab nav ----------
@@ -1380,19 +1649,50 @@
   });
 
   // ---------- Add idea / item / member ----------
+  renderLinkRows([{type:'other', note:''}]); // seed the first link row on page load
+  document.getElementById('addLinkRowBtn').addEventListener('click', function(){ addLinkRow(); });
+  document.getElementById('cancelEditBtn').addEventListener('click', function(){ resetIdeaForm(); });
+  document.getElementById('deleteIdeaLink').addEventListener('click', function(e){
+    e.preventDefault();
+    if(!editingIdeaId) return;
+    if(!window.confirm('Delete this suggestion for everyone? This can\'t be undone.')) return;
+    removeIdea(editingIdeaId);
+    resetIdeaForm();
+    renderVote();
+    renderPlanner();
+    renderDashboard();
+  });
   document.getElementById('addIdeaBtn').addEventListener('click', function(){
     var name = document.getElementById('ideaName').value.trim();
     if(!name) return;
     var category = document.getElementById('ideaCategory').value;
-    var sourceType = document.getElementById('ideaSourceType').value;
-    var sourceNote = document.getElementById('ideaSourceNote').value.trim();
+    var links = readLinksFromForm();
+    var primary = links[0] || {type:'other', note:''};
     var protein = document.getElementById('ideaProtein').value;
     var effort = document.getElementById('ideaEffort').value;
     var cuisine = document.getElementById('ideaCuisine').value;
-    addIdea(uid(), {name:name, category:category, sourceType:sourceType, sourceNote:sourceNote, protein:protein, effort:effort, cuisine:cuisine});
-    document.getElementById('ideaName').value = '';
-    document.getElementById('ideaSourceNote').value = '';
+    var payload = {
+      name:name, category:category, links:links,
+      sourceType:primary.type, sourceNote:primary.note,
+      protein:protein, effort:effort, cuisine:cuisine
+    };
+    addIdea(editingIdeaId || uid(), payload); // addIdea upserts, so this also saves edits
+    resetIdeaForm();
     renderVote();
+  });
+
+  // ---------- Add/edit side ----------
+  renderLinkRowsInto('sideLinksRows', [{type:'other', note:''}]);
+  document.getElementById('addSideLinkRowBtn').addEventListener('click', function(){ addLinkRowInto('sideLinksRows'); });
+  document.getElementById('cancelSideEditBtn').addEventListener('click', function(){ resetSideForm(); });
+  document.getElementById('addSideBtn').addEventListener('click', function(){
+    var name = document.getElementById('sideName').value.trim();
+    if(!name) return;
+    var links = readLinksFromFormIn('sideLinksRows');
+    addSide(editingSideId || uid(), {name:name, links:links}); // addSide upserts, so this also saves edits
+    resetSideForm();
+    renderSides();
+    renderPlanner();
   });
   document.getElementById('ideaFilterRow').addEventListener('click', function(e){
     var btn = e.target.closest('.filter-btn');

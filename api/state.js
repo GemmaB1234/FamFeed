@@ -15,7 +15,7 @@ const kv = global.__famFeedRedis || (global.__famFeedRedis = new Redis(process.e
 // }
 module.exports = async (req, res) => {
   try {
-    const [members, ideasRaw, ideaVotesRaw, mealsRaw, shoppingRaw, archivedRaw, safeFoods] = await Promise.all([
+    const [members, ideasRaw, ideaVotesRaw, mealsRaw, shoppingRaw, archivedRaw, safeFoods, sidesRaw] = await Promise.all([
       kv.hgetall('members'),
       kv.hgetall('ideas'),
       kv.hgetall('ideaVotes'),
@@ -23,6 +23,7 @@ module.exports = async (req, res) => {
       kv.hgetall('shoppingList'),
       kv.hgetall('archivedLists'),
       kv.hgetall('safeFoods'),
+      kv.hgetall('sides'),
     ]);
 
     const ideas = {};
@@ -57,6 +58,11 @@ module.exports = async (req, res) => {
       archivedLists[id] = safeParse(archivedRaw[id], {});
     });
 
+    const sides = {};
+    Object.keys(sidesRaw || {}).forEach((id) => {
+      sides[id] = safeParse(sidesRaw[id], {});
+    });
+
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).json({
       members: members || {},
@@ -65,6 +71,7 @@ module.exports = async (req, res) => {
       shoppingList,
       archivedLists,
       safeFoods: safeFoods || {},
+      sides,
     });
   } catch (e) {
     res.status(500).json({ error: String(e && e.message ? e.message : e) });
