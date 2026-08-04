@@ -33,7 +33,11 @@
       linear-gradient(180deg, var(--bg1), #FFF9F0 60%, var(--bg1));
     color:var(--ink);
     min-height:100vh;
-    padding-bottom:80px;
+    padding-bottom:96px;
+  }
+  button, input, select, textarea{ font-family:inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--grape); outline-offset:2px;
   }
   header.top{
     padding:28px 20px 18px;
@@ -64,30 +68,76 @@
     font-size:0.85rem;
     text-align:center;
   }
-  nav.tabs{
-    display:flex;
-    justify-content:center;
-    gap:8px;
-    flex-wrap:wrap;
-    padding:0 12px 20px;
+  /* Bottom nav — fixed, thumb-reachable core tabs */
+  .bottom-nav{
+    position:fixed; left:0; right:0; bottom:0; z-index:40;
+    display:flex; background:var(--card);
+    box-shadow:0 -4px 20px rgba(43,33,64,0.12);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
   }
-  nav.tabs button{
-    border:none;
-    background:var(--card);
-    color:var(--ink);
-    padding:10px 18px;
-    border-radius:999px;
-    font-size:0.92rem;
-    font-weight:600;
-    cursor:pointer;
-    box-shadow:var(--shadow);
-    transition:transform .15s ease, background .15s ease, color .15s ease;
+  .bottom-nav button{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+    border:none; background:none; color:var(--muted); font-weight:700; font-size:0.66rem;
+    padding:7px 2px 6px; cursor:pointer; border-radius:14px; min-height:52px;
+    transition:color .15s ease, background .15s ease;
   }
-  nav.tabs button:hover{ transform:translateY(-2px); }
-  nav.tabs button.active{
-    background:linear-gradient(90deg, var(--sunset), var(--grape));
-    color:white;
+  .bottom-nav button .bn-icon{ font-size:1.35rem; line-height:1; }
+  .bottom-nav button.active{ color:var(--grape); background:#F5F0FC; }
+
+  /* More sheet — the rest of the tabs, one tap away */
+  .more-sheet-overlay{
+    position:fixed; inset:0; background:rgba(30,15,45,0.5); display:flex;
+    align-items:flex-end; justify-content:center; z-index:45; padding:0;
   }
+  .more-sheet{
+    background:#fff; width:100%; max-width:520px; border-radius:20px 20px 0 0;
+    padding:16px 16px calc(22px + env(safe-area-inset-bottom)); box-shadow:0 -10px 30px rgba(0,0,0,0.2);
+    position:relative;
+  }
+  .more-sheet-close{
+    position:absolute; top:10px; right:14px; background:none; border:none; font-size:1.3rem;
+    color:var(--muted); cursor:pointer; padding:4px;
+  }
+  .more-sheet-title{ font-weight:800; font-size:1.05rem; margin:0 0 12px; }
+  .more-sheet-item{
+    display:flex; align-items:center; width:100%; text-align:left; gap:10px;
+    border:none; background:#F7F4FC; color:var(--ink); font-weight:700; font-size:0.98rem;
+    padding:15px 14px; border-radius:14px; margin-bottom:8px; cursor:pointer;
+  }
+  .more-sheet-item:hover{ background:#EFE6FC; }
+  .more-sheet-item:last-child{ margin-bottom:0; }
+
+  /* Home view */
+  .home-hero{ text-align:center; }
+  .home-greeting{ color:var(--muted); font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+  .home-today-label{ color:var(--muted); font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin-top:6px; }
+  .home-today-meal{ font-size:1.5rem; font-weight:800; margin:4px 0 8px; }
+  .home-today-empty{ font-size:1.05rem; color:var(--muted); margin:6px 0 2px; }
+  .home-progress-row{ display:flex; justify-content:space-between; font-size:0.88rem; font-weight:700; margin-bottom:8px; }
+  .home-progress-bar{ height:10px; border-radius:999px; background:#F0EDF6; overflow:hidden; }
+  .home-progress-bar span{ display:block; height:100%; background:linear-gradient(90deg, var(--teal), var(--grape)); border-radius:999px; transition:width .5s ease; }
+  .home-quick-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+  .home-shopping-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:700; flex-wrap:wrap; }
+  .home-shortcuts{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
+  .home-shortcut{
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 10px;
+    border:none; border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow);
+    font-weight:700; font-size:0.85rem; color:var(--ink); cursor:pointer;
+    transition:transform .15s ease;
+  }
+  .home-shortcut:hover{ transform:translateY(-2px); }
+  .home-shortcut-icon{ font-size:1.6rem; }
+
+  /* Quick Plan (reuses the spin modal shell) */
+  .quick-plan-picks{ display:flex; flex-direction:column; gap:8px; margin:14px 0; max-height:280px; overflow-y:auto; }
+  .quick-plan-pick{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    border:none; background:#F7F4FC; border-radius:14px; padding:13px 14px;
+    font-weight:700; font-size:0.95rem; color:var(--ink); cursor:pointer; text-align:left;
+  }
+  .quick-plan-pick:hover{ background:#EFE6FC; }
+  .quick-plan-pick-name{ flex:1; }
+
   main{
     max-width:900px;
     margin:0 auto;
@@ -173,6 +223,9 @@
   .no-meal{ color:var(--muted); font-style:italic; }
   .vote-btn.del-idea{ background:none; font-size:1rem; opacity:0.5; min-width:auto; padding:10px 8px; }
   .vote-btn.del-idea:hover{ opacity:1; }
+  .vote-btn.expand-toggle-btn{ font-size:1.1rem; color:var(--muted); min-width:auto; padding:10px 12px; }
+  .meal-card-details{ margin-top:12px; padding-top:12px; border-top:1px solid #F0EDF6; }
+  .edit-idea-inline-btn{ margin-top:4px; }
   .assign-select{
     width:100%; padding:9px 12px; border-radius:10px; border:1px solid #EEE3F5; font-size:0.92rem;
   }
@@ -194,6 +247,12 @@
     background:#F0EDF6; color:var(--ink);
   }
   .filter-row.filter-row2{ margin-top:8px; }
+  .idea-protein-heading{
+    font-weight:800; font-size:0.8rem; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--muted); margin:20px 4px 8px; padding-top:14px; border-top:1px solid #ECE7F5;
+  }
+  .idea-protein-heading:first-child{ margin-top:4px; padding-top:0; border-top:none; }
+  .idea-protein-heading .idea-protein-count{ font-weight:600; text-transform:none; letter-spacing:normal; }
   .filter-row select, .filter-row input[type=text]{
     padding:6px 10px; border-radius:999px; border:1px solid #EEE3F5; font-size:0.82rem;
   }
@@ -289,12 +348,15 @@
     padding:8px 10px; border-radius:10px; border:1px solid #EEE3F5; font-size:0.85rem;
   }
   .source-note{ flex:1; min-width:140px; }
-  .idea-link-row{ display:flex; gap:8px; width:100%; margin-bottom:6px; align-items:center; }
-  .idea-link-row select{ flex:1; min-width:0; }
-  .idea-link-row input[type=text]{ flex:2; min-width:0; }
+  .idea-link-row{ width:100%; margin-bottom:6px; }
+  .idea-link-row-main{ display:flex; gap:8px; align-items:center; }
+  .idea-link-row-main select{ flex:1; min-width:0; }
+  .idea-link-row-main input[type=text]{ flex:2; min-width:0; }
   .idea-link-row .rmLinkBtn{
     background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; padding:2px 6px; line-height:1;
   }
+  .photo-row-btn{ padding:9px 12px; flex:none; }
+  .photo-row-status{ font-size:0.78rem; color:var(--muted); margin-top:4px; padding-left:2px; }
   .link-row-btn{ margin:0 0 10px; }
   .edit-idea-btn{
     border:2px solid transparent; background:#F6F5FA; border-radius:10px; padding:0 12px; font-size:1rem; cursor:pointer;
@@ -324,9 +386,11 @@
   .add-item-form input[type=text].qty{ flex:0.6; min-width:70px; }
   .btn{
     background:linear-gradient(90deg, var(--sunset), var(--grape));
-    color:#fff; border:none; padding:9px 18px; border-radius:10px;
-    font-weight:700; cursor:pointer; font-size:0.9rem;
+    color:#fff; border:none; padding:11px 20px; border-radius:10px;
+    font-weight:700; cursor:pointer; font-size:0.9rem; min-height:42px;
+    transition:transform .12s ease, box-shadow .12s ease;
   }
+  .btn:active{ transform:scale(0.97); }
   .btn.secondary{ background:#F0EBFA; color:var(--grape); }
   .cat-group{ margin-bottom:14px; }
   .cat-title{ font-weight:800; color:var(--teal); font-size:0.85rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
@@ -378,23 +442,26 @@
     position:absolute; top:10px; right:12px; background:none; border:none; font-size:1.3rem;
     color:var(--muted); cursor:pointer; line-height:1; padding:4px;
   }
-  .wheel-outer{ position:relative; width:230px; height:230px; margin:14px auto 10px; }
-  .wheel-pointer{
-    position:absolute; top:-4px; left:50%; transform:translateX(-50%); z-index:2;
-    width:0; height:0; border-left:11px solid transparent; border-right:11px solid transparent;
-    border-top:18px solid var(--grape);
+  .spin-reel-outer{
+    position:relative; width:100%; max-width:270px; height:216px; margin:14px auto 10px;
+    border-radius:16px; overflow:hidden; background:#F7F4FC;
+    box-shadow:inset 0 0 0 2px rgba(142,92,247,0.18), 0 6px 18px rgba(0,0,0,0.14);
   }
-  .wheel-disc{
-    position:absolute; inset:0; border-radius:50%; overflow:hidden;
-    box-shadow:0 6px 20px rgba(0,0,0,0.2), inset 0 0 0 4px #fff;
-    transition:transform 4.2s cubic-bezier(0.15,0.65,0.15,1);
+  .spin-reel-track{ position:absolute; left:0; right:0; top:0; transition:transform 3.6s cubic-bezier(0.12,0.68,0.15,1); }
+  .spin-reel-item{
+    height:54px; display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:0 16px; font-weight:700; font-size:0.92rem; color:var(--ink); box-sizing:border-box;
+    border-bottom:1px dashed rgba(43,33,64,0.1); border-left:5px solid transparent;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; background:#fff;
   }
-  .wheel-slice-label{
-    position:absolute; top:50%; left:50%; width:0; height:0;
-    font-size:0.62rem; font-weight:800; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.4);
-    white-space:nowrap; text-align:center;
+  .spin-reel-highlight{
+    position:absolute; top:50%; left:4px; right:4px; height:54px; transform:translateY(-50%);
+    border-top:3px solid var(--grape); border-bottom:3px solid var(--grape);
+    background:rgba(142,92,247,0.08); pointer-events:none; z-index:2; border-radius:6px;
   }
-  .wheel-slice-label span{ display:inline-block; transform:translateX(-50%); }
+  .spin-reel-fade{ position:absolute; left:0; right:0; height:46px; pointer-events:none; z-index:3; }
+  .spin-reel-fade-top{ top:0; background:linear-gradient(#F7F4FC, rgba(247,244,252,0)); }
+  .spin-reel-fade-bottom{ bottom:0; background:linear-gradient(rgba(247,244,252,0), #F7F4FC); }
   .wheel-result{ font-size:1.1rem; font-weight:800; min-height:1.6em; margin:6px 0; color:var(--grape); }
   .wheel-for-date{ font-weight:700; margin-bottom:2px; }
 </style>
@@ -410,21 +477,40 @@
   Running locally without a live backend — deploy to Vercel (see SETUP.md) so votes actually sync across everyone's phones.
 </div>
 
-<nav class="tabs">
-  <button data-view="vote" class="active">🍽️ Mains</button>
-  <button data-view="sides">🍚 Sides</button>
-  <button data-view="planner">📅 Planner</button>
-  <button data-view="shopping">🛒 Shopping List</button>
-  <button data-view="archive">🗄️ Archive</button>
-  <button data-view="dashboard">📊 Dashboard</button>
-  <button data-view="household">👪 Household</button>
-</nav>
 
 <main>
   <div id="whoBar"></div>
 
+  <!-- HOME VIEW — the app's landing screen: today's plan, this week's progress,
+       shopping snapshot and quick actions, so there's somewhere glanceable to
+       land instead of jumping straight into a list. -->
+  <section id="view-home" class="view active">
+    <div class="card home-hero">
+      <div class="home-greeting" id="homeGreeting"></div>
+      <div id="homeToday"></div>
+    </div>
+    <div class="card">
+      <h2>This week</h2>
+      <div class="sub">How much of the week's sorted so far.</div>
+      <div id="homeWeekProgress"></div>
+      <div class="home-quick-actions">
+        <button type="button" class="btn" id="homeQuickPlanBtn">🚀 Quick Plan the week</button>
+        <button type="button" class="btn secondary" id="homeSpinBtn">🎲 Surprise me</button>
+      </div>
+    </div>
+    <div class="card">
+      <div id="homeShoppingSnapshot"></div>
+    </div>
+    <div class="home-shortcuts">
+      <button type="button" class="home-shortcut" data-view="vote"><span class="home-shortcut-icon">➕</span><span>Add a meal idea</span></button>
+      <button type="button" class="home-shortcut" data-view="planner"><span class="home-shortcut-icon">📅</span><span>Open Planner</span></button>
+      <button type="button" class="home-shortcut" data-view="shopping"><span class="home-shortcut-icon">🛒</span><span>Shopping List</span></button>
+      <button type="button" class="home-shortcut" data-view="sides"><span class="home-shortcut-icon">🍚</span><span>Sides Library</span></button>
+    </div>
+  </section>
+
   <!-- VOTE VIEW (a.k.a. "Mains" — the "Can We Have?" idea pool) -->
-  <section id="view-vote" class="view active">
+  <section id="view-vote" class="view">
     <div class="card">
       <h2>🍽️ Mains</h2>
       <div class="sub">Suggest anything you fancy — "can we have this?" — everyone votes below, and the favourites get slotted into the Planner.</div>
@@ -434,7 +520,7 @@
           <option value="new">🎉 Something new</option>
           <option value="safe">😌 Old faithful (safe bet)</option>
         </select>
-        <button class="btn" id="addIdeaBtn">Suggest it</button>
+        <button class="btn" id="addIdeaBtn">Add it</button>
         <button type="button" class="btn secondary" id="cancelEditBtn" style="display:none;">Cancel edit</button>
       </div>
       <button type="button" class="btn secondary" id="toggleIdeaDetailsBtn" style="margin:-8px 0 12px;">+ Add a link or tags (optional)</button>
@@ -476,6 +562,10 @@
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="new">🎉 New</button>
         <button class="filter-btn" data-filter="safe">😌 Safe bets</button>
+      </div>
+      <div class="filter-row" id="ideaViewModeRow">
+        <button class="filter-btn active" data-viewmode="list">📋 Flat list</button>
+        <button class="filter-btn" data-viewmode="protein">🍗 By protein</button>
       </div>
       <div class="filter-row filter-row2">
         <input type="text" id="ideaSearch" placeholder="🔍 Search…">
@@ -537,7 +627,7 @@
     </div>
     <div class="card">
       <h2>Plan this fortnight's dinners</h2>
-      <div class="sub">Pick from the suggestions in 🍽️ Mains for each night — best-voted ones are listed first. No inspiration? Hit 🎲 and let the wheel decide.</div>
+      <div class="sub">Pick from the suggestions in 🍽️ Mains for each night — best-voted ones are listed first. No inspiration? Hit 🎲 and let the spinner decide.</div>
       <div class="wheel-week-btns">
         <button type="button" class="btn secondary" id="wheelWeek1Btn">🎲 Surprise me — this week's empty nights</button>
         <button type="button" class="btn secondary" id="wheelWeek2Btn">🎲 Surprise me — next week's empty nights</button>
@@ -546,7 +636,7 @@
     </div>
     <div class="card">
       <h2>Share with the family</h2>
-      <div class="sub">Send this exact page link to everyone — they'll land straight on the Mains tab.</div>
+      <div class="sub">Send this exact page link to everyone — they'll land on the Home screen with tonight's plan.</div>
       <div class="link-box">
         <code id="shareLink"></code>
         <button class="btn" id="copyLinkBtn">Copy link</button>
@@ -623,6 +713,28 @@
   </section>
 </main>
 
+<!-- BOTTOM NAV — thumb-reachable core tabs, with less-used views tucked under More -->
+<nav class="bottom-nav">
+  <button data-view="home" class="active"><span class="bn-icon">🏠</span><span class="bn-label">Home</span></button>
+  <button data-view="vote"><span class="bn-icon">🍽️</span><span class="bn-label">Mains</span></button>
+  <button data-view="planner"><span class="bn-icon">📅</span><span class="bn-label">Planner</span></button>
+  <button data-view="shopping"><span class="bn-icon">🛒</span><span class="bn-label">Shopping</span></button>
+  <button type="button" id="moreNavBtn"><span class="bn-icon">⋯</span><span class="bn-label">More</span></button>
+</nav>
+
+<!-- MORE SHEET — Sides / Archive / Votes / Household live here to keep the
+     bottom nav itself down to a thumb-friendly five buttons -->
+<div class="more-sheet-overlay" id="moreSheetOverlay" style="display:none;">
+  <div class="more-sheet">
+    <button type="button" class="more-sheet-close" id="moreSheetCloseBtn" title="Close">✕</button>
+    <div class="more-sheet-title">More</div>
+    <button type="button" class="more-sheet-item" data-view="sides">🍚 Sides</button>
+    <button type="button" class="more-sheet-item" data-view="archive">🗄️ Archive</button>
+    <button type="button" class="more-sheet-item" data-view="dashboard">📊 Votes</button>
+    <button type="button" class="more-sheet-item" data-view="household">👪 Household</button>
+  </div>
+</div>
+
 <!-- WHEEL RANDOMISER MODAL -->
 <div class="wheel-overlay" id="wheelOverlay" style="display:none;">
   <div class="wheel-modal">
@@ -698,6 +810,7 @@
 
   var SOURCE_TYPES = [
     {key:'cookbook', label:'📖 Cookbook'},
+    {key:'photo', label:'📷 Photo/Screenshot'},
     {key:'tiktok', label:'📱 TikTok'},
     {key:'instagram', label:'📸 Instagram'},
     {key:'facebook', label:'👍 Facebook'},
@@ -742,6 +855,8 @@
     return '<span class="cat-badge '+c+'">'+meta.emoji+' '+meta.label+'</span>';
   }
   var ideaFilter = 'all'; // 'all' | 'new' | 'safe'
+  var ideaViewMode = 'list'; // 'list' | 'protein' — flat scannable list, or grouped into protein sections
+  var ideaCardExpanded = {}; // ideaId -> bool, whether its details (tags/source/edit/ingredients) are shown
 
   var PROTEIN_TYPES = {
     chicken: {emoji:'🍗', label:'Chicken'},
@@ -791,19 +906,34 @@
   function renderLinkRows(links){
     renderLinkRowsInto('ideaLinksRows', links);
   }
+  // Markup for one link row: a source-type select, a link/note text field,
+  // a 📷 button that lets you attach a photo instead of typing a link, and
+  // (once a photo's been read) a hidden field carrying the extracted
+  // ingredients/instructions so they travel with the form on submit.
+  function linkRowHtml(link, idx, showRemove){
+    var extractedJson = link.extracted ? JSON.stringify(link.extracted) : '';
+    return '<div class="idea-link-row" data-linkrow="'+idx+'">' +
+      '<div class="idea-link-row-main">' +
+        '<select class="ideaLinkType">'+sourceTypeOptionsHtml(link.type||'other')+'</select>' +
+        '<input type="text" class="ideaLinkNote" placeholder="link / note (optional)" value="'+escapeHtml(link.note||'')+'">' +
+        '<button type="button" class="btn secondary photo-row-btn" title="Attach a photo instead of a link">📷</button>' +
+        (showRemove ? '<button type="button" class="rmLinkBtn" title="Remove this link">✕</button>' : '') +
+      '</div>' +
+      '<input type="file" accept="image/*" class="ideaLinkPhotoFile" style="display:none;">' +
+      '<input type="hidden" class="ideaLinkExtracted" value="'+escapeHtml(extractedJson)+'">' +
+      '<div class="photo-row-status">'+(link.extracted ? '✅ Found '+link.extracted.ingredients.length+' ingredients from a photo' : '')+'</div>' +
+    '</div>';
+  }
   // Generic link-row widget, reused by both the recipe-idea form and the
   // sides-library form (containerId is the id of the wrapping <div>).
   function renderLinkRowsInto(containerId, links){
     var rows = (links && links.length ? links : [{type:'other', note:''}]);
     var wrap = document.getElementById(containerId);
     wrap.innerHTML = rows.map(function(link, idx){
-      return '<div class="idea-link-row" data-linkrow="'+idx+'">' +
-        '<select class="ideaLinkType">'+sourceTypeOptionsHtml(link.type||'other')+'</select>' +
-        '<input type="text" class="ideaLinkNote" placeholder="link / note (optional)" value="'+escapeHtml(link.note||'')+'">' +
-        (rows.length > 1 ? '<button type="button" class="rmLinkBtn" title="Remove this link">✕</button>' : '') +
-      '</div>';
+      return linkRowHtml(link, idx, rows.length > 1);
     }).join('');
     wireLinkRowRemovers(wrap);
+    wirePhotoRowButtons(wrap);
   }
   function wireLinkRowRemovers(wrap){
     wrap.querySelectorAll('.rmLinkBtn').forEach(function(btn){
@@ -818,25 +948,109 @@
       };
     });
   }
+  // Shrinks a photo client-side before uploading (phone photos can be several
+  // MB; a resized JPEG is both faster to send and keeps under Vercel's
+  // request-size limit). Falls back to the original file if canvas isn't
+  // available for any reason, rather than failing outright.
+  function compressImageFile(file, maxDim, quality){
+    return new Promise(function(resolve, reject){
+      var settled = false;
+      function finish(fn, arg){ if(settled) return; settled = true; fn(arg); }
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var img = new Image();
+        // Defensive fallback: if the browser never fires either image event
+        // (shouldn't happen for a real photo, but better than hanging on
+        // "Reading photo…" forever), fall back to the uncompressed original.
+        var safetyTimer = setTimeout(function(){
+          finish(resolve, {base64: String(e.target.result).split(',')[1], mimeType: file.type || 'image/jpeg'});
+        }, 8000);
+        img.onload = function(){
+          clearTimeout(safetyTimer);
+          try {
+            var w = img.width, h = img.height;
+            var scale = Math.min(1, maxDim / Math.max(w, h));
+            var cw = Math.max(1, Math.round(w * scale));
+            var ch = Math.max(1, Math.round(h * scale));
+            var canvas = document.createElement('canvas');
+            canvas.width = cw; canvas.height = ch;
+            var ctx = canvas.getContext && canvas.getContext('2d');
+            if(!ctx){ finish(resolve, {base64: String(e.target.result).split(',')[1], mimeType: file.type || 'image/jpeg'}); return; }
+            ctx.drawImage(img, 0, 0, cw, ch);
+            var dataUrl = canvas.toDataURL('image/jpeg', quality);
+            finish(resolve, {base64: dataUrl.split(',')[1], mimeType: 'image/jpeg'});
+          } catch(err){
+            finish(resolve, {base64: String(e.target.result).split(',')[1], mimeType: file.type || 'image/jpeg'});
+          }
+        };
+        img.onerror = function(){
+          clearTimeout(safetyTimer);
+          finish(reject, new Error('Could not read that image'));
+        };
+        img.src = e.target.result;
+      };
+      reader.onerror = function(){ finish(reject, new Error('Could not read that file')); };
+      reader.readAsDataURL(file);
+    });
+  }
+  // Uploads an already-compressed photo for one link row, calling the
+  // extraction endpoint and filling in that row's type/note/extracted fields.
+  function uploadPhotoForRow(row, base64, mimeType){
+    var statusEl = row.querySelector('.photo-row-status');
+    statusEl.textContent = '📖 Reading photo…';
+    return fetch('/api/extract-recipe-image', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({imageBase64: base64, mimeType: mimeType})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data && data.ok && data.ingredients && data.ingredients.length){
+        row.querySelector('.ideaLinkType').value = 'photo';
+        if(!row.querySelector('.ideaLinkNote').value.trim() && data.name){
+          row.querySelector('.ideaLinkNote').value = data.name;
+        }
+        row.querySelector('.ideaLinkExtracted').value = JSON.stringify({ingredients:data.ingredients, instructions:data.instructions||[]});
+        statusEl.textContent = '✅ Found '+data.ingredients.length+' ingredients from that photo';
+      } else {
+        statusEl.textContent = '⚠️ '+((data && data.reason) || "Couldn't read that photo — try again or paste it in by hand.");
+      }
+    })
+    .catch(function(){
+      statusEl.textContent = '⚠️ Photo upload failed — check your connection and try again.';
+    });
+  }
+  function wirePhotoRowButtons(wrap){
+    wrap.querySelectorAll('.photo-row-btn').forEach(function(btn){
+      btn.onclick = function(){ btn.closest('.idea-link-row').querySelector('.ideaLinkPhotoFile').click(); };
+    });
+    wrap.querySelectorAll('.ideaLinkPhotoFile').forEach(function(input){
+      input.onchange = function(){
+        var file = input.files && input.files[0];
+        if(!file) return;
+        var row = input.closest('.idea-link-row');
+        compressImageFile(file, 1400, 0.82)
+          .then(function(result){ return uploadPhotoForRow(row, result.base64, result.mimeType); })
+          .catch(function(err){
+            row.querySelector('.photo-row-status').textContent = '⚠️ '+(err && err.message ? err.message : 'Could not read that photo.');
+          });
+      };
+    });
+  }
   function addLinkRow(){ addLinkRowInto('ideaLinksRows'); }
   function addLinkRowInto(containerId){
     var wrap = document.getElementById(containerId);
     var idx = wrap.querySelectorAll('.idea-link-row').length;
-    var row = document.createElement('div');
-    row.className = 'idea-link-row';
-    row.setAttribute('data-linkrow', idx);
-    row.innerHTML = '<select class="ideaLinkType">'+sourceTypeOptionsHtml('other')+'</select>' +
-      '<input type="text" class="ideaLinkNote" placeholder="link / note (optional)">' +
-      '<button type="button" class="rmLinkBtn" title="Remove this link">✕</button>';
-    wrap.appendChild(row);
+    wrap.insertAdjacentHTML('beforeend', linkRowHtml({type:'other', note:''}, idx, true));
     // now that there's more than one row, make sure the first row also has a remove button
     var first = wrap.querySelector('.idea-link-row');
     if(first && !first.querySelector('.rmLinkBtn')){
       var rm = document.createElement('button');
       rm.type = 'button'; rm.className = 'rmLinkBtn'; rm.title = 'Remove this link'; rm.textContent = '✕';
-      first.appendChild(rm);
+      first.querySelector('.idea-link-row-main').appendChild(rm);
     }
     wireLinkRowRemovers(wrap);
+    wirePhotoRowButtons(wrap);
   }
   function readLinksFromForm(){ return readLinksFromFormIn('ideaLinksRows'); }
   function readLinksFromFormIn(containerId){
@@ -845,12 +1059,20 @@
     rows.forEach(function(row){
       var type = row.querySelector('.ideaLinkType').value;
       var note = row.querySelector('.ideaLinkNote').value.trim();
-      links.push({type:type, note:note});
+      var link = {type:type, note:note};
+      var extractedRaw = row.querySelector('.ideaLinkExtracted').value;
+      if(extractedRaw){
+        try {
+          var parsed = JSON.parse(extractedRaw);
+          if(parsed && Array.isArray(parsed.ingredients) && parsed.ingredients.length) link.extracted = parsed;
+        } catch(e){ /* ignore malformed stash */ }
+      }
+      links.push(link);
     });
     // drop trailing empty rows beyond the first one (e.g. an unused "+ Add another link" row)
     while(links.length > 1){
       var last = links[links.length-1];
-      if(last.note === '' && last.type === 'other') links.pop(); else break;
+      if(last.note === '' && last.type === 'other' && !last.extracted) links.pop(); else break;
     }
     return links;
   }
@@ -866,7 +1088,7 @@
     document.getElementById('ideaEffort').value = 'medium';
     document.getElementById('ideaCuisine').value = 'other';
     renderLinkRows([{type:'other', note:''}]);
-    document.getElementById('addIdeaBtn').textContent = 'Suggest it';
+    document.getElementById('addIdeaBtn').textContent = 'Add it';
     document.getElementById('cancelEditBtn').style.display = 'none';
     document.getElementById('deleteIdeaWrap').style.display = 'none';
     setIdeaDetailsOpen(false);
@@ -947,6 +1169,7 @@
         renderPlanner();
         renderCalendar();
         renderDashboard();
+        renderHome();
       });
     });
     wireIngredientPanelEvents(el, renderSides);
@@ -960,9 +1183,23 @@
     if(!ideaPanels[id]) ideaPanels[id] = {open:false, manualOpen:false, manualText:'', week:1, pulls:{}};
     return ideaPanels[id];
   }
-  function getPull(id, linkIdx){
+  // `link` is optional and only used the first time a pull entry is created:
+  // if it's a photo-type link that already has extracted ingredients (read
+  // at upload time), seed the pull straight into its "success" state instead
+  // of idle, since there's nothing left to fetch.
+  function getPull(id, linkIdx, link){
     var panel = getPanel(id);
-    if(!panel.pulls[linkIdx]) panel.pulls[linkIdx] = {status:'idle', ingredients:[], instructions:[]};
+    if(!panel.pulls[linkIdx]){
+      if(link && link.type === 'photo' && link.extracted && Array.isArray(link.extracted.ingredients) && link.extracted.ingredients.length){
+        panel.pulls[linkIdx] = {
+          status: 'success',
+          ingredients: link.extracted.ingredients.map(function(t){ return {text:t, checked:true}; }),
+          instructions: Array.isArray(link.extracted.instructions) ? link.extracted.instructions : []
+        };
+      } else {
+        panel.pulls[linkIdx] = {status:'idle', ingredients:[], instructions:[]};
+      }
+    }
     return panel.pulls[linkIdx];
   }
   // Ingredient-pulling is shared between "Can We Have?" ideas and Sides —
@@ -1358,11 +1595,15 @@
   // A recipe idea can have several links (main dish + a side, say) — each gets
   // its own auto-pull attempt/result, plus one shared manual-paste fallback.
   function linkPullSectionHtml(id, idx, link, multiple){
-    var pull = getPull(id, idx);
+    var pull = getPull(id, idx, link);
     var label = multiple ? '<div class="sub" style="margin:10px 0 2px;font-weight:700;">'+sourceLabel(link.type)+(link.note ? ' — '+escapeHtml(link.note) : '')+'</div>' : '';
     var body = '';
     if(pull.status === 'idle'){
-      body = '<button class="btn" data-pull="'+id+'" data-linkidx="'+idx+'" data-url="'+escapeHtml(link.note.trim())+'">🔍 Try pulling ingredients from this link</button>';
+      // Photo links were already read (or failed to be) at upload time — there's
+      // no live link to fetch, so there's nothing to offer a pull button for.
+      body = (link.type === 'photo')
+        ? '<div class="sub" style="margin:0 0 4px;">No ingredients were read from this photo.</div>'
+        : '<button class="btn" data-pull="'+id+'" data-linkidx="'+idx+'" data-url="'+escapeHtml(link.note.trim())+'">🔍 Try pulling ingredients from this link</button>';
     } else if(pull.status === 'loading'){
       body = '<span class="empty-hint">Reading the recipe…</span>';
     } else if(pull.status === 'success'){
@@ -1385,18 +1626,65 @@
     if(!panel.open) return toggleBtn;
 
     var links = linksOf(idea);
-    var urlLinks = links.filter(function(l){ return l.note && /^https?:\/\//i.test(l.note.trim()); });
-    var multiple = urlLinks.length > 1;
-    var pullSections = urlLinks.map(function(link){
+    // "Pullable" = a real http(s) link we can fetch, or a photo (already read at
+    // upload time) — either way there's something worth its own section here.
+    var pullableLinks = links.filter(function(l){ return (l.note && /^https?:\/\//i.test(l.note.trim())) || l.type === 'photo'; });
+    var multiple = pullableLinks.length > 1;
+    var pullSections = pullableLinks.map(function(link){
       var idx = links.indexOf(link);
       return linkPullSectionHtml(id, idx, link, multiple);
     }).join('');
 
-    var noLinksHint = urlLinks.length ? '' : '<div class="sub" style="margin:0 0 4px;">No links saved for this one.</div>';
+    var noLinksHint = pullableLinks.length ? '' : '<div class="sub" style="margin:0 0 4px;">No links saved for this one.</div>';
     var manualToggleBtn = '<button class="btn secondary" data-manualtoggle="'+id+'" style="margin-top:10px;">✍️ '+(panel.manualOpen?'Hide paste box':'Paste ingredients myself')+'</button>';
     var manualSection = panel.manualOpen ? '<div style="margin-top:6px;">'+manualBoxHtml(id, panel)+'</div>' : '';
 
     return toggleBtn + '<div class="ingredient-panel">' + noLinksHint + pullSections + manualToggleBtn + manualSection + '</div>';
+  }
+
+  // Builds one recipe card's HTML — shared by the flat list and the
+  // grouped-by-protein view so both render identically.
+  function ideaCardHtml(id, me){
+    var idea = state.ideas[id];
+    var tally = tallyOf(idea);
+    var myVote = me ? (idea.votes || {})[me] : null;
+    var expanded = !!ideaCardExpanded[id];
+
+    var buttons = VOTE_OPTIONS.map(function(opt){
+      var sel = myVote === opt.key ? ' selected '+opt.key : '';
+      return '<button class="vote-btn'+sel+'" data-id="'+id+'" data-choice="'+opt.key+'" '+(me?'':'disabled')+'>'+opt.emoji+'</button>';
+    }).join('');
+
+    var sourceHtml = linksOf(idea).map(function(link){
+      return '<span class="meal-source">'+sourceLabel(link.type)+(link.note ? ' — '+escapeHtml(link.note) : '')+'</span>';
+    }).join(' ');
+    var tagsHtml = tagPill(PROTEIN_TYPES, proteinOf(idea)) + tagPill(EFFORT_LEVELS, effortOf(idea)) + tagPill(CUISINE_TYPES, cuisineOf(idea));
+
+    // Collapsed: just name, category, tally and the vote/expand buttons — a scannable
+    // list even with a big pool of recipes. Tags, source links, edit and the
+    // ingredients panel only render once a card is expanded.
+    var detailsHtml = expanded
+      ? '<div class="meal-card-details">' +
+          '<div>'+tagsHtml+'</div>' +
+          (sourceHtml ? '<div style="margin-top:6px;">'+sourceHtml+'</div>' : '') +
+          '<button type="button" class="btn secondary edit-idea-inline-btn" data-edit="'+id+'">✏️ Edit suggestion</button>' +
+          ingredientPanelHtml(id, idea) +
+        '</div>'
+      : '';
+
+    return '<div class="card">' +
+      '<div class="meal-vote-card">' +
+        '<div class="meal-info">' +
+          '<div class="meal-name">'+escapeHtml(idea.name)+'</div>' +
+          categoryBadge(idea) +
+          '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>' +
+        '</div>' +
+        '<div class="vote-buttons">'+buttons+
+          '<button class="vote-btn expand-toggle-btn" data-expand="'+id+'" title="'+(expanded?'Show less':'More details')+'">'+(expanded?'⌃':'⌄')+'</button>' +
+        '</div>' +
+      '</div>' +
+      detailsHtml +
+    '</div>';
   }
 
   // ---------- Render: Vote ("Can We Have?") ----------
@@ -1408,6 +1696,9 @@
 
     document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-filter') === ideaFilter);
+    });
+    document.querySelectorAll('#ideaViewModeRow .filter-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-viewmode') === ideaViewMode);
     });
 
     if(allIds.length === 0){
@@ -1430,35 +1721,27 @@
     }
     ids.sort(function(a,b){ return scoreOfIdea(state.ideas[b]) - scoreOfIdea(state.ideas[a]); });
 
-    var html = ids.map(function(id){
-      var idea = state.ideas[id];
-      var tally = tallyOf(idea);
-      var myVote = me ? (idea.votes || {})[me] : null;
-
-      var buttons = VOTE_OPTIONS.map(function(opt){
-        var sel = myVote === opt.key ? ' selected '+opt.key : '';
-        return '<button class="vote-btn'+sel+'" data-id="'+id+'" data-choice="'+opt.key+'" '+(me?'':'disabled')+'>'+opt.emoji+'</button>';
+    var html;
+    if(ideaViewMode === 'protein'){
+      // Bucket the already-filtered, already-score-sorted ids into protein
+      // sections (in the taxonomy's declared order), skipping any empty ones.
+      // Each card still shows its own New/Safe bet badge, so both groupings
+      // (protein section + category badge) stay visible at once.
+      var buckets = {};
+      ids.forEach(function(id){
+        var p = proteinOf(state.ideas[id]);
+        (buckets[p] = buckets[p] || []).push(id);
+      });
+      html = Object.keys(PROTEIN_TYPES).map(function(p){
+        var list = buckets[p];
+        if(!list || !list.length) return '';
+        var meta = PROTEIN_TYPES[p];
+        return '<div class="idea-protein-heading">'+meta.emoji+' '+meta.label+' <span class="idea-protein-count">· '+list.length+'</span></div>' +
+          list.map(function(id){ return ideaCardHtml(id, me); }).join('');
       }).join('');
-
-      var sourceHtml = linksOf(idea).map(function(link){
-        return '<span class="meal-source">'+sourceLabel(link.type)+(link.note ? ' — '+escapeHtml(link.note) : '')+'</span>';
-      }).join(' ');
-      var tagsHtml = tagPill(PROTEIN_TYPES, proteinOf(idea)) + tagPill(EFFORT_LEVELS, effortOf(idea)) + tagPill(CUISINE_TYPES, cuisineOf(idea));
-
-      return '<div class="card">' +
-        '<div class="meal-vote-card">' +
-          '<div class="meal-info">' +
-            '<div class="meal-name">'+escapeHtml(idea.name)+'</div>' +
-            categoryBadge(idea) + sourceHtml + '<div>'+tagsHtml+'</div>' +
-            '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>' +
-          '</div>' +
-          '<div class="vote-buttons">'+buttons+
-            '<button class="vote-btn edit-idea-btn" data-edit="'+id+'" title="Edit suggestion">✏️</button>' +
-          '</div>' +
-        '</div>' +
-        ingredientPanelHtml(id, idea) +
-      '</div>';
-    }).join('');
+    } else {
+      html = ids.map(function(id){ return ideaCardHtml(id, me); }).join('');
+    }
     el.innerHTML = html;
 
     el.querySelectorAll('.vote-btn[data-id]').forEach(function(btn){
@@ -1473,6 +1756,13 @@
         renderDashboard();
       });
     });
+    el.querySelectorAll('[data-expand]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.getAttribute('data-expand');
+        ideaCardExpanded[id] = !ideaCardExpanded[id];
+        renderVote();
+      });
+    });
     el.querySelectorAll('[data-edit]').forEach(function(btn){
       btn.addEventListener('click', function(){
         editIdea(btn.getAttribute('data-edit'));
@@ -1481,10 +1771,18 @@
     wireIngredientPanelEvents(el, renderVote);
   }
 
-  // ---------- Wheel randomiser ----------
+  // ---------- Spin randomiser ----------
+  // A vertical "slot reel" rather than a pie wheel — plain horizontal text in
+  // stacked rows reads far more cleanly than labels wrapped around a circle,
+  // with no risk of text drifting off its slice.
   var WHEEL_COLORS = ['#FF6B4A','#8E5CF7','#2BB3A3','#FFB648','#5AA9E6','#FF7AA8','#7ED957','#B98AFB'];
-  var MAX_WHEEL_SEGMENTS = 10;
-  var wheelState = null; // {queue:[dates], segments:[{id,name}], rotation, usedIds:[], winner}
+  var MAX_WHEEL_SEGMENTS = 12;
+  var SPIN_ITEM_HEIGHT = 54;
+  var SPIN_REEL_HEIGHT = 216;
+  var SPIN_LAPS = 3; // full shuffled laps of the pool before landing on the winner
+  var wheelState = null; // {queue:[dates], segments:[{id,name,protein}], usedIds:[], winner}
+  var quickPlanQueue = null; // [dates] remaining to fill via the guided Quick Plan flow
+  var quickPlanResumeQueue = null; // [dates] to hand back to Quick Plan once a one-off spin (from "spin instead") finishes
 
   function shuffleArr(arr){
     var a = arr.slice();
@@ -1495,10 +1793,124 @@
     return a;
   }
   function ideaPoolForWheel(){
-    return Object.keys(state.ideas).map(function(id){ return {id:id, name: state.ideas[id].name || 'Mystery dish'}; });
+    return Object.keys(state.ideas).map(function(id){
+      var idea = state.ideas[id];
+      return { id:id, name: idea.name || 'Mystery dish', protein: proteinOf(idea) };
+    });
+  }
+  // Which week (1 or 2) a Planner date falls in, so the spinner can look at
+  // what's already planned around it.
+  function weekKeyOfDate(dateStr){
+    if(WEEK_DATES[1] && WEEK_DATES[1].indexOf(dateStr) !== -1) return 1;
+    if(WEEK_DATES[2] && WEEK_DATES[2].indexOf(dateStr) !== -1) return 2;
+    return null;
+  }
+  // Picks which segments are fair game for this spin: prefers dishes that
+  // aren't already planned that week AND don't share a protein with something
+  // already planned that week (so it won't stack two chicken nights back to
+  // back), falling back to looser rules only if that leaves nothing to pick.
+  function eligibleSegmentIndices(segs, dateStr){
+    var all = segs.map(function(s, i){ return i; });
+    var wk = weekKeyOfDate(dateStr);
+    var plannedIds = {};
+    var plannedProteins = {};
+    if(wk){
+      WEEK_DATES[wk].forEach(function(d){
+        if(wheelState.queue.indexOf(d) !== -1) return; // a still-empty slot we're filling this session
+        var meal = state.meals[d];
+        if(meal && meal.ideaId){
+          plannedIds[meal.ideaId] = true;
+          var idea = state.ideas[meal.ideaId];
+          var p = idea ? proteinOf(idea) : '';
+          if(p && p !== 'other') plannedProteins[p] = true;
+        }
+      });
+    }
+    wheelState.usedIds.forEach(function(id){ plannedIds[id] = true; });
+
+    var tier1 = all.filter(function(i){
+      var s = segs[i];
+      if(plannedIds[s.id]) return false;
+      if(s.protein && s.protein !== 'other' && plannedProteins[s.protein]) return false;
+      return true;
+    });
+    if(tier1.length) return tier1;
+    var tier2 = all.filter(function(i){ return !plannedIds[segs[i].id]; });
+    if(tier2.length) return tier2;
+    return all; // pool's too small to avoid repeats entirely — better a repeat than nothing
   }
   function openWheelOverlay(){ document.getElementById('wheelOverlay').style.display = 'flex'; }
-  function closeWheelOverlay(){ document.getElementById('wheelOverlay').style.display = 'none'; wheelState = null; }
+  function closeWheelOverlay(){
+    document.getElementById('wheelOverlay').style.display = 'none';
+    wheelState = null;
+    quickPlanQueue = null;
+    quickPlanResumeQueue = null;
+  }
+
+  // ---------- Quick Plan (guided flow) ----------
+  // Reuses the same overlay/modal as the spinner, but shows top suggestions
+  // as tap-to-pick cards instead of forcing a spin — walking through each
+  // empty night in the week one at a time. "Spin instead" hands off to the
+  // regular spinner for just that one night, then drops back into the guided
+  // flow for whatever's left (see the resume branch in useWheelResult).
+  function startQuickPlan(){
+    var empty = WEEK_DATES[1].filter(function(d){ return !state.meals[d] || !state.meals[d].ideaId; });
+    if(!empty.length){ window.alert("This week's already fully planned! 🎉"); return; }
+    quickPlanQueue = empty.slice();
+    renderQuickPlanStep();
+    openWheelOverlay();
+  }
+
+  function renderQuickPlanStep(){
+    if(!quickPlanQueue || !quickPlanQueue.length){
+      closeWheelOverlay();
+      renderPlanner(); renderDashboard(); renderCalendar(); renderHome();
+      return;
+    }
+    var dateStr = quickPlanQueue[0];
+    var ids = Object.keys(state.ideas)
+      .sort(function(a,b){ return scoreOfIdea(state.ideas[b]) - scoreOfIdea(state.ideas[a]); })
+      .slice(0, 5);
+
+    var picksHtml = ids.length
+      ? ids.map(function(id){
+          var idea = state.ideas[id];
+          return '<button type="button" class="quick-plan-pick" data-quickpick="'+id+'">' +
+            '<span class="quick-plan-pick-name">'+escapeHtml(idea.name)+'</span>' +
+            categoryBadge(idea) +
+          '</button>';
+        }).join('')
+      : '<div class="sub" style="margin:10px 0;">Add a few meal ideas in 🍽️ Mains first, then come back!</div>';
+
+    document.getElementById('wheelBody').innerHTML =
+      '<div class="wheel-for-date">🚀 What\'s for '+escapeHtml(dayLabel(dateStr))+'?</div>' +
+      '<div class="sub">'+quickPlanQueue.length+' night'+(quickPlanQueue.length === 1 ? '' : 's')+' left to plan</div>' +
+      '<div class="quick-plan-picks">'+picksHtml+'</div>' +
+      (ids.length ? '<button type="button" class="btn secondary" id="quickPlanSpinBtn" style="margin-top:6px;">🎲 Not sure? Spin instead</button>' : '') +
+      '<button type="button" class="btn secondary" id="quickPlanSkipBtn" style="margin-top:8px;">Skip this night</button>';
+
+    document.querySelectorAll('[data-quickpick]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var ideaId = btn.getAttribute('data-quickpick');
+        assignMeal(dateStr, ideaId);
+        quickPlanQueue.shift();
+        renderPlanner(); renderDashboard(); renderCalendar(); renderHome();
+        renderQuickPlanStep();
+      });
+    });
+    var spinBtn = document.getElementById('quickPlanSpinBtn');
+    if(spinBtn) spinBtn.addEventListener('click', function(){
+      var remainingAfterThis = quickPlanQueue.slice(1);
+      quickPlanQueue = null; // the spinner owns the overlay now
+      quickPlanResumeQueue = remainingAfterThis;
+      startWheel([dateStr]);
+    });
+    var skipBtn = document.getElementById('quickPlanSkipBtn');
+    if(skipBtn) skipBtn.addEventListener('click', function(){
+      quickPlanQueue.shift();
+      renderQuickPlanStep();
+    });
+  }
 
   function startWheel(dates){
     dates = dates.filter(Boolean);
@@ -1511,41 +1923,30 @@
       return;
     }
     var segments = shuffleArr(pool).slice(0, Math.min(MAX_WHEEL_SEGMENTS, pool.length));
-    wheelState = { queue: dates.slice(), segments: segments, rotation: 0, usedIds: [], winner: null };
+    wheelState = { queue: dates.slice(), segments: segments, usedIds: [], winner: null };
     renderWheelBody();
     openWheelOverlay();
+  }
+
+  function reelItemHtml(s, i){
+    var color = WHEEL_COLORS[i % WHEEL_COLORS.length];
+    return '<div class="spin-reel-item" style="border-left-color:'+color+';">'+escapeHtml(s.name)+'</div>';
   }
 
   function renderWheelBody(){
     if(!wheelState) return;
     var dateStr = wheelState.queue[0];
     var segs = wheelState.segments;
-    var n = segs.length;
-    var seg = 360 / n;
-
-    var gradientStops = segs.map(function(s, i){
-      var color = WHEEL_COLORS[i % WHEEL_COLORS.length];
-      return color + ' ' + (i*seg) + 'deg ' + ((i+1)*seg) + 'deg';
-    }).join(', ');
-
-    var labelsHtml = segs.map(function(s, i){
-      var mid = i*seg + seg/2;
-      var label = s.name.length > 16 ? s.name.slice(0,15) + '…' : s.name;
-      // Rotate+translate the (zero-size) anchor out to the slice's midpoint angle;
-      // the inner span only ever gets a plain translateX(-50%) to center the text
-      // on that anchor — no nested rotation, so there's no mismatched pivot point
-      // to make the label drift off its spoke.
-      return '<div class="wheel-slice-label" style="transform:rotate('+mid+'deg) translateY(-92px);">' +
-        '<span>'+escapeHtml(label)+'</span>' +
-      '</div>';
-    }).join('');
+    var idleItems = shuffleArr(segs).map(reelItemHtml).join('');
 
     document.getElementById('wheelBody').innerHTML =
       '<div class="wheel-for-date">🎲 What\'s for '+escapeHtml(dayLabel(dateStr))+'?</div>' +
       '<div class="sub">'+(wheelState.queue.length > 1 ? (wheelState.queue.length)+' nights left to fill' : 'Spin to decide!')+'</div>' +
-      '<div class="wheel-outer">' +
-        '<div class="wheel-pointer"></div>' +
-        '<div class="wheel-disc" id="wheelDisc" style="background:conic-gradient('+gradientStops+'); transform:rotate('+wheelState.rotation+'deg);">'+labelsHtml+'</div>' +
+      '<div class="spin-reel-outer">' +
+        '<div class="spin-reel-track" id="spinReelTrack" style="transform:translateY(0px);">'+idleItems+'</div>' +
+        '<div class="spin-reel-highlight"></div>' +
+        '<div class="spin-reel-fade spin-reel-fade-top"></div>' +
+        '<div class="spin-reel-fade spin-reel-fade-bottom"></div>' +
       '</div>' +
       '<div class="wheel-result" id="wheelResult"></div>' +
       '<button type="button" class="btn" id="spinWheelBtn">🎲 Spin!</button>' +
@@ -1566,28 +1967,38 @@
   function spinWheel(){
     if(!wheelState) return;
     var segs = wheelState.segments;
-    var n = segs.length;
-    var seg = 360 / n;
 
-    // avoid repeating a side/meal already used earlier in this session, unless we've used them all
-    var eligible = segs.map(function(s,i){ return i; }).filter(function(i){ return wheelState.usedIds.indexOf(segs[i].id) === -1; });
-    if(eligible.length === 0) eligible = segs.map(function(s,i){ return i; });
-
+    var eligible = eligibleSegmentIndices(segs, wheelState.queue[0]);
     var winnerIdx = eligible[Math.floor(Math.random() * eligible.length)];
     wheelState.winner = segs[winnerIdx];
 
-    var winnerMid = winnerIdx*seg + seg/2;
-    var currentMod = ((wheelState.rotation % 360) + 360) % 360;
-    var delta = (360 - winnerMid - currentMod + 360) % 360;
-    var extraSpins = 4 + Math.floor(Math.random()*3);
-    wheelState.rotation += extraSpins*360 + delta;
+    // Build a long reel of shuffled laps with the winner as the very last
+    // item, then scroll the track so that last item lands centred under the
+    // highlight window — no rotation math, no carried-over state between
+    // spins, so nothing can drift or misalign.
+    var reelList = [];
+    for(var lap=0; lap<SPIN_LAPS; lap++) reelList = reelList.concat(shuffleArr(segs));
+    reelList.push(wheelState.winner);
+    var winnerPos = reelList.length - 1;
+    var target = -(winnerPos*SPIN_ITEM_HEIGHT + SPIN_ITEM_HEIGHT/2 - SPIN_REEL_HEIGHT/2);
 
     var spinBtn = document.getElementById('spinWheelBtn');
-    var disc = document.getElementById('wheelDisc');
-    if(!spinBtn || !disc) return;
+    var track = document.getElementById('spinReelTrack');
+    if(!spinBtn || !track) return;
     spinBtn.style.display = 'none';
     document.getElementById('wheelResult').textContent = '';
-    disc.style.transform = 'rotate('+wheelState.rotation+'deg)';
+
+    track.innerHTML = reelList.map(reelItemHtml).join('');
+    track.style.transition = 'none';
+    track.style.transform = 'translateY(0px)';
+    // Force a reflow so the instant reset above is applied before we re-enable
+    // the transition — otherwise the browser can coalesce both style changes
+    // into one and the reel never appears to move.
+    track.offsetHeight;
+    track.style.transition = '';
+    requestAnimationFrame(function(){
+      track.style.transform = 'translateY('+target+'px)';
+    });
 
     var revealed = false;
     function reveal(){
@@ -1598,11 +2009,11 @@
       if(resultEl) resultEl.textContent = '🎉 ' + wheelState.winner.name + '!';
       if(actionsEl) actionsEl.style.display = '';
     }
-    disc.addEventListener('transitionend', function handler(){
-      disc.removeEventListener('transitionend', handler);
+    track.addEventListener('transitionend', function handler(){
+      track.removeEventListener('transitionend', handler);
       reveal();
     });
-    setTimeout(reveal, 4400); // fallback in case the browser skips transitionend
+    setTimeout(reveal, 3900); // fallback in case the browser skips transitionend
   }
 
   function useWheelResult(){
@@ -1613,8 +2024,16 @@
     renderPlanner();
     renderDashboard();
     renderCalendar();
+    renderHome();
     if(wheelState.queue.length){
       renderWheelBody();
+    } else if(quickPlanResumeQueue && quickPlanResumeQueue.length){
+      // We were handed off from Quick Plan to spin for just one night —
+      // now that it's used, drop back into the guided flow for the rest.
+      var resume = quickPlanResumeQueue;
+      quickPlanResumeQueue = null;
+      quickPlanQueue = resume;
+      renderQuickPlanStep();
     } else {
       closeWheelOverlay();
     }
@@ -1632,6 +2051,12 @@
   document.getElementById('wheelWeek2Btn').addEventListener('click', function(){
     var empty = WEEK_DATES[2].filter(function(d){ return !state.meals[d] || !state.meals[d].ideaId; });
     if(!empty.length){ window.alert('Every night next week already has something planned!'); return; }
+    startWheel(empty);
+  });
+  document.getElementById('homeQuickPlanBtn').addEventListener('click', startQuickPlan);
+  document.getElementById('homeSpinBtn').addEventListener('click', function(){
+    var empty = WEEK_DATES[1].filter(function(d){ return !state.meals[d] || !state.meals[d].ideaId; });
+    if(!empty.length){ window.alert('Every night this week already has something planned!'); return; }
     startWheel(empty);
   });
 
@@ -1679,7 +2104,7 @@
 
       return '<div class="day-card" id="daycard-'+dateStr+'" data-day-date="'+dateStr+'">' +
         '<div class="day-label">'+dayLabel(dateStr)+
-          '<button type="button" class="wheel-trigger" data-wheel-date="'+dateStr+'" title="Spin the wheel for this night">🎲</button>' +
+          '<button type="button" class="wheel-trigger" data-wheel-date="'+dateStr+'" title="Spin for this night">🎲</button>' +
         '</div>' +
         '<select class="assign-select" data-date="'+dateStr+'">'+options+'</select>' +
         sourceHtml +
@@ -1695,6 +2120,7 @@
         renderPlanner();
         renderDashboard();
         renderCalendar();
+        renderHome();
       });
     });
     el.querySelectorAll('[data-backup-date]').forEach(function(sel){
@@ -1714,6 +2140,7 @@
         renderPlanner();
         renderDashboard();
         renderCalendar();
+        renderHome();
       });
     });
     el.querySelectorAll('[data-wheel-date]').forEach(function(btn){
@@ -1802,6 +2229,7 @@
         var id = cb.getAttribute('data-id');
         toggleShoppingItem(id, cb.checked);
         renderShopping();
+        renderHome();
       });
     });
     el.querySelectorAll('.del').forEach(function(btn){
@@ -1809,6 +2237,7 @@
         var id = btn.getAttribute('data-id');
         deleteShoppingItem(id);
         renderShopping();
+        renderHome();
       });
     });
     el.querySelectorAll('[data-archive-week]').forEach(function(btn){
@@ -1818,6 +2247,7 @@
         archiveWeek(week);
         renderShopping();
         renderArchive();
+        renderHome();
       });
     });
   }
@@ -1863,6 +2293,55 @@
         renderArchive();
       });
     });
+  }
+
+  // ---------- Render: Home ----------
+  // The landing screen: tonight's plan, this week's progress, a shopping
+  // snapshot and a couple of quick actions — one glanceable place to start,
+  // instead of landing on a list of recipes.
+  function renderHome(){
+    var todayStr = DATES[0];
+    var todayMeal = state.meals[todayStr];
+
+    var greetEl = document.getElementById('homeGreeting');
+    if (greetEl) greetEl.textContent = dayLabel(todayStr);
+
+    var todayEl = document.getElementById('homeToday');
+    if (todayEl) {
+      if (todayMeal && todayMeal.ideaId) {
+        var sideBadges = sideNamesOfMeal(todayMeal).map(function(n){
+          return '<span class="side-badge">🍚 ' + escapeHtml(n) + '</span>';
+        }).join('');
+        todayEl.innerHTML =
+          '<div class="home-today-label">Tonight</div>' +
+          '<div class="home-today-meal">' + escapeHtml(todayMeal.name) + '</div>' +
+          sideBadges;
+      } else {
+        todayEl.innerHTML =
+          '<div class="home-today-label">Tonight</div>' +
+          '<div class="home-today-empty">Nothing planned yet.</div>' +
+          '<button type="button" class="btn" data-view="planner" style="margin-top:6px;">Plan tonight</button>';
+      }
+    }
+
+    var progEl = document.getElementById('homeWeekProgress');
+    if (progEl) {
+      var week1 = WEEK_DATES[1];
+      var plannedCount = week1.filter(function(d){ return state.meals[d] && state.meals[d].ideaId; }).length;
+      var pct = Math.round((plannedCount / week1.length) * 100);
+      progEl.innerHTML =
+        '<div class="home-progress-row"><span>' + plannedCount + ' of ' + week1.length + ' nights planned</span><span>' + pct + '%</span></div>' +
+        '<div class="home-progress-bar"><span style="width:' + pct + '%;"></span></div>';
+    }
+
+    var shopEl = document.getElementById('homeShoppingSnapshot');
+    if (shopEl) {
+      var items = Object.keys(state.shoppingList || {}).map(function(id){ return state.shoppingList[id]; });
+      var unchecked = items.filter(function(i){ return i && !i.checked; }).length;
+      shopEl.innerHTML = unchecked
+        ? '<div class="home-shopping-row"><span>🛒 ' + unchecked + ' item' + (unchecked === 1 ? '' : 's') + ' left to buy</span><button type="button" class="btn secondary" data-view="shopping">View list</button></div>'
+        : '<div class="home-shopping-row"><span>🛒 Shopping list is all checked off ✅</span><button type="button" class="btn secondary" data-view="shopping">View list</button></div>';
+    }
   }
 
   // ---------- Render: Dashboard ----------
@@ -1944,6 +2423,7 @@
 
   function renderAll(){
     renderWhoBar();
+    renderHome();
     renderVote();
     renderPlanner();
     renderCalendar();
@@ -1956,13 +2436,39 @@
   }
 
   // ---------- Tab nav ----------
-  document.querySelectorAll('nav.tabs button').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      document.querySelectorAll('nav.tabs button').forEach(function(b){ b.classList.remove('active'); });
-      document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
-      btn.classList.add('active');
-      document.getElementById('view-'+btn.getAttribute('data-view')).classList.add('active');
+  // Views tucked away under "More" so the bottom nav itself stays down to
+  // five thumb-reachable buttons; the More button lights up while any of
+  // them is the active view, so it's still obvious where you are.
+  var MORE_VIEWS = ['sides', 'archive', 'dashboard', 'household'];
+  function switchView(viewKey){
+    var target = document.getElementById('view-' + viewKey);
+    if (!target) return;
+    document.querySelectorAll('.bottom-nav > [data-view]').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-view') === viewKey);
     });
+    var moreBtn = document.getElementById('moreNavBtn');
+    if (moreBtn) moreBtn.classList.toggle('active', MORE_VIEWS.indexOf(viewKey) !== -1);
+    document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+    target.classList.add('active');
+    closeMoreSheet();
+    window.scrollTo(0, 0);
+  }
+  // Delegated so any [data-view] button anywhere (bottom nav, More sheet,
+  // Home's shortcut tiles, "Plan tonight" CTAs, etc.) just works.
+  document.addEventListener('click', function(e){
+    var btn = e.target.closest('[data-view]');
+    if (!btn) return;
+    switchView(btn.getAttribute('data-view'));
+  });
+  function openMoreSheet(){ document.getElementById('moreSheetOverlay').style.display = 'flex'; }
+  function closeMoreSheet(){ document.getElementById('moreSheetOverlay').style.display = 'none'; }
+  document.getElementById('moreNavBtn').addEventListener('click', function(){
+    var isOpen = document.getElementById('moreSheetOverlay').style.display === 'flex';
+    if (isOpen) closeMoreSheet(); else openMoreSheet();
+  });
+  document.getElementById('moreSheetCloseBtn').addEventListener('click', closeMoreSheet);
+  document.getElementById('moreSheetOverlay').addEventListener('click', function(e){
+    if (e.target.id === 'moreSheetOverlay') closeMoreSheet();
   });
 
   // ---------- Add idea / item / member ----------
@@ -1983,6 +2489,7 @@
     renderVote();
     renderPlanner();
     renderDashboard();
+    renderHome();
   });
   document.getElementById('addIdeaBtn').addEventListener('click', function(){
     var name = document.getElementById('ideaName').value.trim();
@@ -2022,6 +2529,12 @@
     ideaFilter = btn.getAttribute('data-filter');
     renderVote();
   });
+  document.getElementById('ideaViewModeRow').addEventListener('click', function(e){
+    var btn = e.target.closest('.filter-btn');
+    if(!btn) return;
+    ideaViewMode = btn.getAttribute('data-viewmode');
+    renderVote();
+  });
   document.getElementById('ideaSearch').addEventListener('input', function(e){
     ideaSearchText = e.target.value;
     renderVote();
@@ -2048,6 +2561,7 @@
     document.getElementById('itemName').value = '';
     document.getElementById('itemQty').value = '';
     renderShopping();
+    renderHome();
   });
   document.getElementById('addMemberBtn').addEventListener('click', function(){
     var name = document.getElementById('memberName').value.trim();
