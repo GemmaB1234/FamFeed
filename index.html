@@ -259,27 +259,56 @@
 
   /* Calendar */
   .calendar-grid{
-    display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:4px; margin-bottom:6px;
+    display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; margin-bottom:6px;
     width:100%; overflow:hidden;
   }
-  .cal-dow{ min-width:0; text-align:center; font-size:0.7rem; color:var(--muted); font-weight:700; text-transform:uppercase; }
+  .cal-dow{
+    min-width:0; text-align:center; font-size:0.66rem; color:var(--muted); font-weight:800;
+    text-transform:uppercase; letter-spacing:.04em; padding-bottom:4px;
+  }
   .cal-cell{
-    min-width:0; background:#FAF9FC; border:1px solid #F0EDF6; border-radius:10px; padding:6px 2px;
-    min-height:56px; cursor:pointer; text-align:center; font-size:0.72rem;
+    min-width:0; background:#fff; border:1px solid #F0EDF6; border-radius:14px; padding:7px 3px 6px;
+    min-height:64px; cursor:pointer; text-align:center; font-size:0.72rem;
     display:flex; flex-direction:column; align-items:center; gap:2px;
-    transition:transform .12s ease;
+    box-shadow:0 2px 6px rgba(43,33,64,0.05);
+    transition:transform .15s ease, box-shadow .15s ease;
+    position:relative; overflow:hidden;
   }
-  .cal-cell:hover{ transform:translateY(-2px); }
-  .cal-cell.empty{ visibility:hidden; cursor:default; }
-  .cal-cell.today{ border-color:var(--grape); border-width:2px; }
-  .cal-daynum{ font-weight:800; font-size:0.85rem; }
+  .cal-cell:hover{ transform:translateY(-3px) scale(1.02); box-shadow:0 8px 18px rgba(43,33,64,0.14); }
+  .cal-cell:active{ transform:translateY(-1px) scale(0.99); }
+  .cal-cell.empty{ visibility:hidden; cursor:default; box-shadow:none; }
+
+  .cal-cell.has-meal.new{ background:linear-gradient(165deg, #FFF3E9, #fff 70%); border-color:#FFDCC2; }
+  .cal-cell.has-meal.safe{ background:linear-gradient(165deg, #E9FBF6, #fff 70%); border-color:#BEEEE1; }
+  .cal-cell.has-meal.new::before, .cal-cell.has-meal.safe::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:4px;
+  }
+  .cal-cell.has-meal.new::before{ background:linear-gradient(90deg, var(--sunset), var(--tangerine)); }
+  .cal-cell.has-meal.safe::before{ background:linear-gradient(90deg, var(--teal), #6FE0CB); }
+
+  .cal-cell.empty-day{ background:#FBFAFD; border:1.5px dashed #E4DCF2; box-shadow:none; }
+  .cal-cell.empty-day:hover{ border-color:var(--grape); background:#F7F2FD; }
+  .cal-add-hint{ color:var(--muted); font-size:0.68rem; font-weight:700; margin-top:2px; }
+  .cal-cell.empty-day:hover .cal-add-hint{ color:var(--grape); }
+
+  .cal-cell.today{
+    background:linear-gradient(165deg, #F6EEFF, #fff 75%);
+    box-shadow:0 0 0 2px var(--grape), 0 8px 18px rgba(142,92,247,0.25);
+  }
+  .cal-cell.today::before{ content:''; position:absolute; top:0; left:0; right:0; height:4px; background:linear-gradient(90deg, var(--sunset), var(--grape)); }
+  .cal-today-chip{
+    position:absolute; top:3px; right:3px; font-size:0.55rem; font-weight:800; color:#fff;
+    background:linear-gradient(90deg, var(--sunset), var(--grape)); padding:1px 5px; border-radius:999px;
+    line-height:1.4;
+  }
+
+  .cal-daynum{ font-weight:800; font-size:0.9rem; }
   .cal-meal{
-    font-size:0.65rem; line-height:1.15; padding:2px 4px; border-radius:6px; width:100%; min-width:0; box-sizing:border-box;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font-size:0.65rem; line-height:1.2; padding:2px 4px; border-radius:6px; width:100%; min-width:0; box-sizing:border-box;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700;
   }
-  .cal-meal.new{ background:#FFF1E6; color:var(--sunset); }
-  .cal-meal.safe{ background:#E8F9F5; color:var(--teal); }
-  .cal-meal.empty-slot{ color:var(--muted); font-style:italic; }
+  .cal-meal.new{ color:var(--sunset); }
+  .cal-meal.safe{ color:var(--teal); }
   .day-card.highlight{ outline:2px solid var(--grape); outline-offset:2px; }
   .cal-backup{
     font-size:0.6rem; margin-top:1px; padding:1px 4px; border-radius:5px; box-sizing:border-box;
@@ -2164,13 +2193,24 @@
     DATES.forEach(function(dateStr){
       var dt = new Date(dateStr+"T00:00:00");
       var meal = state.meals[dateStr];
-      var mealHtml = meal
-        ? '<div class="cal-meal '+categoryOf(meal)+'">'+escapeHtml(meal.name)+'</div>'
-        : '<div class="cal-meal empty-slot">—</div>';
+      var hasMeal = !!(meal && meal.name);
+      var cat = hasMeal ? categoryOf(meal) : '';
+      var proteinEmoji = '';
+      if(hasMeal){
+        var idea = meal.ideaId ? state.ideas[meal.ideaId] : null;
+        proteinEmoji = idea ? PROTEIN_TYPES[proteinOf(idea)].emoji + ' ' : '';
+      }
+      var mealHtml = hasMeal
+        ? '<div class="cal-meal '+cat+'">'+proteinEmoji+escapeHtml(meal.name)+'</div>'
+        : '<div class="cal-add-hint">+ Plan</div>';
       var backupHtml = (meal && meal.backupFood) ? '<div class="cal-backup">🆘 '+escapeHtml(meal.backupFood)+'</div>' : '';
       var sideNames = sideNamesOfMeal(meal);
       var sideHtml = sideNames.length ? '<div class="cal-side">🍚 '+escapeHtml(sideNames.join(', '))+'</div>' : '';
-      html += '<div class="cal-cell'+(dateStr===todayStr?' today':'')+'" data-jump="'+dateStr+'">' +
+      var isToday = dateStr === todayStr;
+      var cellClass = 'cal-cell' + (isToday ? ' today' : '') + (hasMeal ? ' has-meal '+cat : ' empty-day');
+      var todayChip = isToday ? '<span class="cal-today-chip">TODAY</span>' : '';
+      html += '<div class="'+cellClass+'" data-jump="'+dateStr+'">' +
+        todayChip +
         '<div class="cal-daynum">'+dt.getDate()+'</div>' + mealHtml + sideHtml + backupHtml +
       '</div>';
     });
