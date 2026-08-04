@@ -42,7 +42,17 @@
   header.top{
     padding:28px 20px 18px;
     text-align:center;
+    position:relative;
   }
+  .how-it-works-btn{
+    position:absolute; top:20px; right:18px; background:var(--card); border:none;
+    width:36px; height:36px; border-radius:50%; font-size:1.05rem; cursor:pointer;
+    box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center;
+  }
+  .how-it-works-btn:hover{ transform:translateY(-1px); }
+  .how-it-works-modal{ text-align:left; max-width:420px; }
+  .how-it-works-list{ margin:0; padding-left:20px; display:flex; flex-direction:column; gap:10px; font-size:0.92rem; line-height:1.4; }
+  .how-it-works-list li{ padding-left:2px; }
   header.top h1{
     margin:0;
     font-size:2rem;
@@ -498,12 +508,28 @@
 <body>
 
 <header class="top">
+  <button type="button" id="howItWorksBtn" class="how-it-works-btn" title="How this works">ℹ️</button>
   <h1>🍽️ Fam Feed</h1>
   <p>Two weeks of dinners. Zero arguments (well — fewer).</p>
 </header>
 
 <div id="demoBanner" class="demo-banner" style="display:none;">
   Running locally without a live backend — deploy to Vercel (see SETUP.md) so votes actually sync across everyone's phones.
+</div>
+
+<!-- HOW IT WORKS MODAL -->
+<div class="more-sheet-overlay" id="howItWorksOverlay" style="display:none; align-items:center;">
+  <div class="more-sheet how-it-works-modal">
+    <button type="button" class="more-sheet-close" id="howItWorksCloseBtn" title="Close">✕</button>
+    <div class="more-sheet-title">🍽️ How Fam Feed works</div>
+    <ul class="how-it-works-list">
+      <li><strong>🍽️ Mains</strong> — anyone adds meal ideas here, sides live in their own library. No pressure, no voting yet — it's just the pool to pick from.</li>
+      <li><strong>📅 Planner</strong> — assign ideas to nights. Once a night has a meal on it, everyone can react with 😋 😐 🤢 — voting is on what's actually happening, not hypotheticals.</li>
+      <li><strong>🚀 / 🎲 Can't decide?</strong> — Quick Plan walks you through empty nights one at a time, or hit Spin and let it choose for you.</li>
+      <li><strong>🛒 Shopping List</strong> — builds itself from what you plan, merging duplicate ingredients automatically.</li>
+    </ul>
+    <button type="button" class="btn" id="howItWorksGotItBtn" style="margin-top:6px;">Got it!</button>
+  </div>
 </div>
 
 
@@ -790,24 +816,26 @@
   // ---------- Tiny in-memory store + polling sync via /api ----------
   var state = {
     members: {},       // id -> name
-    ideas: {},          // id -> {name, sourceType, sourceNote, votes:{memberId:choice}}  ("Can we have?" pool)
-    meals: {},          // dateStr -> {ideaId, name, sourceType, sourceNote, backupFood}  (assigned plan snapshot)
+    ideas: {},          // id -> {name, sourceType, sourceNote}  (Mains suggestion pool — no votes)
+    meals: {},          // dateStr -> {ideaId, name, sourceType, sourceNote, backupFood, votes:{memberId:choice}}  (assigned plan — voting lives here)
     shoppingList: {},   // id -> {name, qty, category, checked, week}
     archivedLists: {},  // id -> {archivedAt, label, items:[{name,qty,category,checked}]}
     safeFoods: {},       // id -> name  (fussy-eater backup foods)
     sides: {}            // id -> {name, links:[{type,note}]}  (reusable side dishes, attachable to any day)
   };
 
-  function tallyOf(idea){
-    var votes = (idea && idea.votes) || {};
+  // Generic — works for anything with a .votes map, which by design is now
+  // only ever a Planner meal (voting happens on what's actually planned,
+  // not on the speculative idea pool).
+  function tallyOf(voteHolder){
+    var votes = (voteHolder && voteHolder.votes) || {};
     var t = {yum:0, meh:0, no:0};
     Object.keys(votes).forEach(function(v){ if(t[votes[v]] !== undefined) t[votes[v]]++; });
     return t;
   }
-  function scoreOfIdea(idea){
-    var t = tallyOf(idea);
-    return t.yum - t.no;
-  }
+  // Suggestions in Mains have no votes to rank by, so they're just ordered
+  // alphabetically wherever a list of ideas needs a stable order.
+  function ideaNameOf(id){ return (state.ideas[id] && state.ideas[id].name) || ''; }
 
   function uid(){ return Math.random().toString(36).slice(2,10); }
 
@@ -1390,11 +1418,14 @@
     state.members[m2] = "Dad";
     state.members[m3] = "Alfie (14)";
     var i1 = uid(), i2 = uid();
-    state.ideas[i1] = {name:"Tray-bake fajitas", sourceType:"tiktok", sourceNote:"", category:"new", votes:{}};
-    state.ideas[i1].votes[m1]='yum'; state.ideas[i1].votes[m2]='yum'; state.ideas[i1].votes[m3]='no';
-    state.ideas[i2] = {name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card", category:"safe", votes:{}};
-    state.ideas[i2].votes[m1]='yum'; state.ideas[i2].votes[m2]='yum'; state.ideas[i2].votes[m3]='yum';
-    state.meals[DATES[1]] = {ideaId:i2, name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card", category:"safe"};
+    state.ideas[i1] = {name:"Tray-bake fajitas", sourceType:"tiktok", sourceNote:"", category:"new"};
+    state.ideas[i2] = {name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card", category:"safe"};
+    // Voting lives on the Planner now — this demo night shows it in action.
+    state.meals[DATES[1]] = {
+      ideaId:i2, name:"Sunday roast", sourceType:"family", sourceNote:"Nan's recipe card", category:"safe",
+      votes:{}
+    };
+    state.meals[DATES[1]].votes[m1]='yum'; state.meals[DATES[1]].votes[m2]='yum'; state.meals[DATES[1]].votes[m3]='yum';
     var si1=uid(), si2=uid();
     state.shoppingList[si1] = {name:"chicken thighs", qty:"1kg", category:"Meat & Fish", checked:false, week:1};
     state.shoppingList[si2] = {name:"peppers", qty:"4", category:"Produce", checked:false, week:1};
@@ -1413,24 +1444,26 @@
     return sendAction({type:'removeMember', id:id});
   }
   function addIdea(id, idea){
-    // also used to save edits — keep existing votes intact in the optimistic update
-    var existingVotes = (state.ideas[id] && state.ideas[id].votes) || {};
-    state.ideas[id] = Object.assign({votes:existingVotes}, idea);
+    // also used to save edits to an existing idea
+    state.ideas[id] = Object.assign({}, idea);
     return sendAction({type:'addIdea', id:id, idea:idea});
   }
   function removeIdea(id){
     delete state.ideas[id];
     return sendAction({type:'removeIdea', id:id});
   }
-  function voteIdea(ideaId, memberId, choice){
-    if(!state.ideas[ideaId]) state.ideas[ideaId] = {name:'', sourceType:'other', sourceNote:'', votes:{}};
-    if(!state.ideas[ideaId].votes) state.ideas[ideaId].votes = {};
-    if(state.ideas[ideaId].votes[memberId] === choice){
-      delete state.ideas[ideaId].votes[memberId];
+  // Voting happens on what's actually planned for a night, not on the
+  // speculative idea pool — so this is keyed by date, not by idea.
+  function voteMeal(dateStr, memberId, choice){
+    var meal = state.meals[dateStr];
+    if(!meal || !meal.ideaId) return; // nothing assigned yet — nothing to vote on
+    if(!meal.votes) meal.votes = {};
+    if(meal.votes[memberId] === choice){
+      delete meal.votes[memberId];
     } else {
-      state.ideas[ideaId].votes[memberId] = choice;
+      meal.votes[memberId] = choice;
     }
-    return sendAction({type:'voteIdea', ideaId:ideaId, memberId:memberId, choice:choice});
+    return sendAction({type:'voteMeal', date:dateStr, memberId:memberId, choice:choice});
   }
   function assignMeal(dateStr, ideaId){
     if(!ideaId){
@@ -1441,10 +1474,14 @@
     var existingMeal = state.meals[dateStr] || {};
     var existingBackup = existingMeal.backupFood || '';
     var existingSideIds = sideIdsOfMeal(existingMeal);
+    // Votes are about whatever's currently planned for the night — picking a
+    // different dish starts the vote fresh; re-picking the same one keeps it.
+    var keepVotes = existingMeal.ideaId === ideaId ? (existingMeal.votes || {}) : {};
     state.meals[dateStr] = {
       ideaId:ideaId, name:idea.name||'', sourceType:idea.sourceType||'other', sourceNote:idea.sourceNote||'',
       category:categoryOf(idea), backupFood:existingBackup,
-      sideIds:existingSideIds, sideNames:sideNamesFor(existingSideIds)
+      sideIds:existingSideIds, sideNames:sideNamesFor(existingSideIds),
+      votes: keepVotes
     };
     return sendAction({type:'assignMeal', date:dateStr, ideaId:ideaId});
   }
@@ -1672,24 +1709,19 @@
   }
 
   // Builds one recipe card's HTML — shared by the flat list and the
-  // grouped-by-protein view so both render identically.
+  // grouped-by-protein view so both render identically. Mains is just the
+  // suggestion pool now — no voting here; voting happens once something's
+  // actually on the Planner, on the Planner itself.
   function ideaCardHtml(id, me){
     var idea = state.ideas[id];
-    var tally = tallyOf(idea);
-    var myVote = me ? (idea.votes || {})[me] : null;
     var expanded = !!ideaCardExpanded[id];
-
-    var buttons = VOTE_OPTIONS.map(function(opt){
-      var sel = myVote === opt.key ? ' selected '+opt.key : '';
-      return '<button class="vote-btn'+sel+'" data-id="'+id+'" data-choice="'+opt.key+'" '+(me?'':'disabled')+'>'+opt.emoji+'</button>';
-    }).join('');
 
     var sourceHtml = linksOf(idea).map(function(link){
       return '<span class="meal-source">'+sourceLabel(link.type)+(link.note ? ' — '+escapeHtml(link.note) : '')+'</span>';
     }).join(' ');
     var tagsHtml = tagPill(PROTEIN_TYPES, proteinOf(idea)) + tagPill(EFFORT_LEVELS, effortOf(idea)) + tagPill(CUISINE_TYPES, cuisineOf(idea));
 
-    // Collapsed: just name, category, tally and the vote/expand buttons — a scannable
+    // Collapsed: just name, category and the expand button — a scannable
     // list even with a big pool of recipes. Tags, source links, edit and the
     // ingredients panel only render once a card is expanded.
     var detailsHtml = expanded
@@ -1706,11 +1738,8 @@
         '<div class="meal-info">' +
           '<div class="meal-name">'+escapeHtml(idea.name)+'</div>' +
           categoryBadge(idea) +
-          '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>' +
         '</div>' +
-        '<div class="vote-buttons">'+buttons+
-          '<button class="vote-btn expand-toggle-btn" data-expand="'+id+'" title="'+(expanded?'Show less':'More details')+'">'+(expanded?'⌃':'⌄')+'</button>' +
-        '</div>' +
+        '<button class="vote-btn expand-toggle-btn" data-expand="'+id+'" title="'+(expanded?'Show less':'More details')+'">'+(expanded?'⌃':'⌄')+'</button>' +
       '</div>' +
       detailsHtml +
     '</div>';
@@ -1748,7 +1777,7 @@
       el.innerHTML = '<div class="card empty-hint">Nothing matches these filters.</div>';
       return;
     }
-    ids.sort(function(a,b){ return scoreOfIdea(state.ideas[b]) - scoreOfIdea(state.ideas[a]); });
+    ids.sort(function(a,b){ return ideaNameOf(a).localeCompare(ideaNameOf(b)); });
 
     var html;
     if(ideaViewMode === 'protein'){
@@ -1773,18 +1802,6 @@
     }
     el.innerHTML = html;
 
-    el.querySelectorAll('.vote-btn[data-id]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        var me2 = getMe();
-        if(!me2) return;
-        var id = btn.getAttribute('data-id');
-        var choice = btn.getAttribute('data-choice');
-        voteIdea(id, me2, choice);
-        renderVote();
-        renderPlanner();
-        renderDashboard();
-      });
-    });
     el.querySelectorAll('[data-expand]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var id = btn.getAttribute('data-expand');
@@ -1897,9 +1914,10 @@
       return;
     }
     var dateStr = quickPlanQueue[0];
-    var ids = Object.keys(state.ideas)
-      .sort(function(a,b){ return scoreOfIdea(state.ideas[b]) - scoreOfIdea(state.ideas[a]); })
-      .slice(0, 5);
+    // No votes to rank by anymore (voting happens after something's on the
+    // Planner) — a shuffled handful keeps this feeling fresh each time
+    // rather than always showing the same alphabetically-first five.
+    var ids = shuffleArr(Object.keys(state.ideas)).slice(0, 5);
 
     var picksHtml = ids.length
       ? ids.map(function(id){
@@ -2093,20 +2111,36 @@
   function renderPlanner(){
     var el = document.getElementById('plannerGrid');
     if(isFocusWithin(el)) { document.getElementById('shareLink').textContent = window.location.href.split('#')[0]; return; }
-    var ideaIds = Object.keys(state.ideas).sort(function(a,b){ return scoreOfIdea(state.ideas[b]) - scoreOfIdea(state.ideas[a]); });
+    var me = getMe();
+    var ideaIds = Object.keys(state.ideas).sort(function(a,b){ return ideaNameOf(a).localeCompare(ideaNameOf(b)); });
 
     el.innerHTML = DATES.map(function(dateStr){
       var meal = state.meals[dateStr];
       var currentIdeaId = meal ? meal.ideaId : '';
       var options = '<option value="">— nothing planned —</option>' + ideaIds.map(function(id){
         var idea = state.ideas[id];
-        var t = tallyOf(idea);
         var catEmoji = IDEA_CATEGORIES[categoryOf(idea)].emoji;
-        var label = catEmoji+' '+idea.name + '  (😋'+t.yum+' 😐'+t.meh+' 🤢'+t.no+')';
+        var label = catEmoji+' '+idea.name;
         return '<option value="'+id+'"'+(currentIdeaId===id?' selected':'')+'>'+escapeHtml(label)+'</option>';
       }).join('');
       var sourceHtml = meal ? '<div style="margin-top:8px;">'+categoryBadge(meal)+'<span class="meal-source">'+sourceLabel(meal.sourceType)+
         (meal.sourceNote ? ' — '+escapeHtml(meal.sourceNote) : '')+'</span></div>' : '';
+
+      // Voting happens here, on what's actually planned — not on the idea
+      // pool — so it only shows up once a night has something assigned.
+      var voteHtml = '';
+      if(meal && meal.ideaId){
+        var myVote = me ? (meal.votes || {})[me] : null;
+        var tally = tallyOf(meal);
+        var voteButtons = VOTE_OPTIONS.map(function(opt){
+          var sel = myVote === opt.key ? ' selected '+opt.key : '';
+          return '<button class="vote-btn'+sel+'" data-vote-date="'+dateStr+'" data-choice="'+opt.key+'" '+(me?'':'disabled')+'>'+opt.emoji+'</button>';
+        }).join('');
+        voteHtml =
+          '<div class="sub" style="margin:10px 0 2px;">What does everyone think?</div>' +
+          '<div class="vote-buttons">'+voteButtons+'</div>' +
+          '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>';
+      }
 
       var safeFoodIds = Object.keys(state.safeFoods);
       var currentBackup = meal ? (meal.backupFood || '') : '';
@@ -2137,6 +2171,7 @@
         '</div>' +
         '<select class="assign-select" data-date="'+dateStr+'">'+options+'</select>' +
         sourceHtml +
+        voteHtml +
         backupHtml +
         sideHtml +
       '</div>';
@@ -2175,6 +2210,17 @@
     el.querySelectorAll('[data-wheel-date]').forEach(function(btn){
       btn.addEventListener('click', function(){
         startWheel([btn.getAttribute('data-wheel-date')]);
+      });
+    });
+    el.querySelectorAll('[data-vote-date]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var me2 = getMe();
+        if(!me2) return;
+        var dateStr = btn.getAttribute('data-vote-date');
+        var choice = btn.getAttribute('data-choice');
+        voteMeal(dateStr, me2, choice);
+        renderPlanner();
+        renderDashboard();
       });
     });
 
@@ -2390,9 +2436,10 @@
     var memberCount = Object.keys(state.members).length || 1;
     var html = DATES.map(function(dateStr){
       var meal = state.meals[dateStr];
-      if(!meal) return '';
+      if(!meal || !meal.ideaId) return '';
       var idea = state.ideas[meal.ideaId];
-      var tally = tallyOf(idea);
+      // Votes belong to the meal (what's actually planned), not the idea.
+      var tally = tallyOf(meal);
       var total = tally.yum+tally.meh+tally.no;
       var pct = function(n){ return total ? (n/total*100) : 0; };
       var flag = (tally.no >= Math.ceil(memberCount/2) && tally.no > 0)
@@ -2509,6 +2556,16 @@
   document.getElementById('moreSheetCloseBtn').addEventListener('click', closeMoreSheet);
   document.getElementById('moreSheetOverlay').addEventListener('click', function(e){
     if (e.target.id === 'moreSheetOverlay') closeMoreSheet();
+  });
+
+  // ---------- How it works ----------
+  function openHowItWorks(){ document.getElementById('howItWorksOverlay').style.display = 'flex'; }
+  function closeHowItWorks(){ document.getElementById('howItWorksOverlay').style.display = 'none'; }
+  document.getElementById('howItWorksBtn').addEventListener('click', openHowItWorks);
+  document.getElementById('howItWorksCloseBtn').addEventListener('click', closeHowItWorks);
+  document.getElementById('howItWorksGotItBtn').addEventListener('click', closeHowItWorks);
+  document.getElementById('howItWorksOverlay').addEventListener('click', function(e){
+    if (e.target.id === 'howItWorksOverlay') closeHowItWorks();
   });
 
   // ---------- Add idea / item / member ----------
