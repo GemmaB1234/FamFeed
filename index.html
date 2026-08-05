@@ -687,16 +687,6 @@
           <option value="medium" selected>🍳 Medium effort</option>
           <option value="project">🛠️ Weekend project</option>
         </select>
-        <select id="ideaCuisine">
-          <option value="british">🇬🇧 British</option>
-          <option value="italian">🇮🇹 Italian</option>
-          <option value="mexican">🌮 Mexican</option>
-          <option value="indian">🇮🇳 Indian</option>
-          <option value="asian">🥢 Asian</option>
-          <option value="mediterranean">🫒 Mediterranean</option>
-          <option value="american">🍔 American</option>
-          <option value="other" selected>🌍 Other</option>
-        </select>
       </div>
       <div id="deleteIdeaWrap" style="display:none;">
         <a class="delete-idea-link" id="deleteIdeaLink">🗑️ Delete this suggestion</a>
@@ -730,17 +720,6 @@
           <option value="quick">⚡ Quick</option>
           <option value="medium">🍳 Medium</option>
           <option value="project">🛠️ Weekend project</option>
-        </select>
-        <select id="filterCuisine">
-          <option value="">Any cuisine</option>
-          <option value="british">🇬🇧 British</option>
-          <option value="italian">🇮🇹 Italian</option>
-          <option value="mexican">🌮 Mexican</option>
-          <option value="indian">🇮🇳 Indian</option>
-          <option value="asian">🥢 Asian</option>
-          <option value="mediterranean">🫒 Mediterranean</option>
-          <option value="american">🍔 American</option>
-          <option value="other">🌍 Other</option>
         </select>
       </div>
     </div>
@@ -1026,16 +1005,6 @@
     medium: {emoji:'🍳', label:'Medium effort'},
     project: {emoji:'🛠️', label:'Weekend project'}
   };
-  var CUISINE_TYPES = {
-    british: {emoji:'🇬🇧', label:'British'},
-    italian: {emoji:'🇮🇹', label:'Italian'},
-    mexican: {emoji:'🌮', label:'Mexican'},
-    indian: {emoji:'🇮🇳', label:'Indian'},
-    asian: {emoji:'🥢', label:'Asian'},
-    mediterranean: {emoji:'🫒', label:'Mediterranean'},
-    american: {emoji:'🍔', label:'American'},
-    other: {emoji:'🌍', label:'Other'}
-  };
   // Best-effort keyword guesser so people don't have to hand-pick the protein
   // every single time — e.g. typing "Salmon leek bake" should land on
   // Fish & seafood without a manual step. Checked in this order (most
@@ -1096,7 +1065,6 @@
   }
   function proteinOf(idea){ return tagOf(PROTEIN_TYPES, idea && idea.protein, 'other'); }
   function effortOf(idea){ return tagOf(EFFORT_LEVELS, idea && idea.effort, 'medium'); }
-  function cuisineOf(idea){ return tagOf(CUISINE_TYPES, idea && idea.cuisine, 'other'); }
   function tagPill(taxonomy, key){
     var meta = taxonomy[key];
     return '<span class="tag-pill">'+meta.emoji+' '+meta.label+'</span>';
@@ -1105,7 +1073,6 @@
   var ideaSearchText = '';
   var proteinFilter = '';
   var effortFilter = '';
-  var cuisineFilter = '';
 
   // ---------- Add/edit idea form: link rows ----------
   // null = form is in "add new" mode; otherwise the id of the idea being edited.
@@ -1141,7 +1108,7 @@
       return linkRowHtml(link, idx, rows.length > 1);
     }).join('');
     wireLinkRowRemovers(wrap);
-    wirePhotoRowButtons(wrap);
+    wirePhotoRowButtons(wrap, containerId);
     wireLinkPreviewFetch(wrap, containerId);
   }
   function wireLinkRowRemovers(wrap){
@@ -1296,7 +1263,7 @@
       statusEl.textContent = '⚠️ Photo upload failed — check your connection and try again.';
     });
   }
-  function wirePhotoRowButtons(wrap){
+  function wirePhotoRowButtons(wrap, containerId){
     wrap.querySelectorAll('.photo-row-btn').forEach(function(btn){
       btn.onclick = function(){ btn.closest('.idea-link-row').querySelector('.ideaLinkPhotoFile').click(); };
     });
@@ -1306,7 +1273,20 @@
         if(!file) return;
         var row = input.closest('.idea-link-row');
         compressImageFile(file, 1400, 0.82)
-          .then(function(result){ return uploadPhotoForRow(row, result.base64, result.mimeType); })
+          .then(function(result){
+            // Someone who's gone to the trouble of photographing the dish (or a
+            // recipe card) shouldn't also have to hunt down a separate cover
+            // photo — reuse this one as the cover, fill-if-empty, regardless of
+            // whether ingredient extraction below finds anything.
+            var ctx = LINK_FORM_CONTEXT[containerId];
+            if(ctx && ctx.imageFieldId){
+              var imageField = document.getElementById(ctx.imageFieldId);
+              if(imageField && !imageField.value){
+                setImagePreview(ctx.imageFieldId, ctx.imageWrapId, ctx.imageImgId, 'data:'+result.mimeType+';base64,'+result.base64);
+              }
+            }
+            return uploadPhotoForRow(row, result.base64, result.mimeType);
+          })
           .catch(function(err){
             row.querySelector('.photo-row-status').textContent = '⚠️ '+(err && err.message ? err.message : 'Could not read that photo.');
           });
@@ -1326,7 +1306,7 @@
       first.querySelector('.idea-link-row-main').appendChild(rm);
     }
     wireLinkRowRemovers(wrap);
-    wirePhotoRowButtons(wrap);
+    wirePhotoRowButtons(wrap, containerId);
     wireLinkPreviewFetch(wrap, containerId);
   }
   function readLinksFromForm(){ return readLinksFromFormIn('ideaLinksRows'); }
@@ -1379,7 +1359,6 @@
     document.getElementById('ideaCategory').value = 'new';
     document.getElementById('ideaProtein').value = 'other';
     document.getElementById('ideaEffort').value = 'medium';
-    document.getElementById('ideaCuisine').value = 'other';
     renderLinkRows([{type:'other', note:''}]);
     setImagePreview('ideaImage', 'ideaImagePreviewWrap', 'ideaImagePreviewImg', '');
     document.getElementById('addIdeaBtn').textContent = 'Add it';
@@ -1396,7 +1375,6 @@
     document.getElementById('ideaCategory').value = categoryOf(idea);
     document.getElementById('ideaProtein').value = proteinOf(idea);
     document.getElementById('ideaEffort').value = effortOf(idea);
-    document.getElementById('ideaCuisine').value = cuisineOf(idea);
     renderLinkRows(linksOf(idea));
     setImagePreview('ideaImage', 'ideaImagePreviewWrap', 'ideaImagePreviewImg', idea.image || '');
     document.getElementById('addIdeaBtn').textContent = 'Save changes';
@@ -2061,7 +2039,7 @@
     var sourceHtml = linksOf(idea).map(function(link){
       return '<span class="meal-source">'+sourceLabel(link.type)+(link.note ? ' — '+escapeHtml(link.note) : '')+'</span>';
     }).join(' ');
-    var tagsHtml = tagPill(PROTEIN_TYPES, proteinOf(idea)) + tagPill(EFFORT_LEVELS, effortOf(idea)) + tagPill(CUISINE_TYPES, cuisineOf(idea));
+    var tagsHtml = tagPill(PROTEIN_TYPES, proteinOf(idea)) + tagPill(EFFORT_LEVELS, effortOf(idea));
 
     body.innerHTML =
       ideaPhotoOrPlaceholderHtml(idea, 'idea-detail-img') +
@@ -2101,7 +2079,6 @@
       if(ideaFilter !== 'all' && categoryOf(idea) !== ideaFilter) return false;
       if(proteinFilter && proteinOf(idea) !== proteinFilter) return false;
       if(effortFilter && effortOf(idea) !== effortFilter) return false;
-      if(cuisineFilter && cuisineOf(idea) !== cuisineFilter) return false;
       if(searchLower && idea.name.toLowerCase().indexOf(searchLower) === -1) return false;
       return true;
     });
@@ -2954,12 +2931,11 @@
     var primary = links[0] || {type:'other', note:''};
     var protein = document.getElementById('ideaProtein').value;
     var effort = document.getElementById('ideaEffort').value;
-    var cuisine = document.getElementById('ideaCuisine').value;
     var image = document.getElementById('ideaImage').value;
     var payload = {
       name:name, category:category, links:links,
       sourceType:primary.type, sourceNote:primary.note,
-      protein:protein, effort:effort, cuisine:cuisine,
+      protein:protein, effort:effort,
       image:image
     };
     addIdea(editingIdeaId || uid(), payload); // addIdea upserts, so this also saves edits
@@ -3013,10 +2989,6 @@
   });
   document.getElementById('filterEffort').addEventListener('change', function(e){
     effortFilter = e.target.value;
-    renderVote();
-  });
-  document.getElementById('filterCuisine').addEventListener('change', function(e){
-    cuisineFilter = e.target.value;
     renderVote();
   });
   document.getElementById('addItemBtn').addEventListener('click', function(){
