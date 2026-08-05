@@ -630,6 +630,7 @@
         <button class="btn" id="addIdeaBtn">Add it</button>
         <button type="button" class="btn secondary" id="cancelEditBtn" style="display:none;">Cancel edit</button>
       </div>
+      <div class="sub" id="proteinGuessHint" style="display:none; margin:-6px 0 8px;"></div>
       <div class="link-preview-wrap" id="ideaImagePreviewWrap" style="display:none;">
         <img id="ideaImagePreviewImg" src="" alt="">
         <span class="sub" style="margin:0;">Photo pulled from your link</span>
@@ -1003,6 +1004,61 @@
     american: {emoji:'🍔', label:'American'},
     other: {emoji:'🌍', label:'Other'}
   };
+  // Best-effort keyword guesser so people don't have to hand-pick the protein
+  // every single time — e.g. typing "Salmon leek bake" should land on
+  // Fish & seafood without a manual step. Checked in this order (most
+  // specific meats first) so something like "chicken pasta bake" lands on
+  // Chicken rather than the more generic carb bucket. It's a helper, not a
+  // rule — the person can always override the dropdown themselves.
+  var PROTEIN_KEYWORDS = {
+    fish: ['salmon','cod','tuna','prawn','shrimp','seafood','fish','trout','mackerel','haddock','hake','sardine','anchovy','crab','lobster','scallop','tilapia','fishcake','fish cake'],
+    chicken: ['chicken','poussin','turkey'],
+    beef: ['beef','steak','mince','burger','brisket','bolognese','meatball','ragu'],
+    pork: ['pork','bacon','sausage','ham','chorizo','gammon','ribs','pancetta','pepperoni'],
+    egg: ['egg','omelette','omelet','frittata','quiche','shakshuka'],
+    veggie: ['veggie','vegan','tofu','lentil','chickpea','paneer','halloumi','quorn','vegetable','veg curry','veg bake'],
+    carb: ['pasta','spaghetti','noodle','risotto','gnocchi','mac and cheese','mac & cheese','jacket potato','rice bowl']
+  };
+  var PROTEIN_GUESS_ORDER = ['fish','chicken','beef','pork','egg','veggie','carb'];
+  // Whole-word matching (with a cheap plural check), not plain substring —
+  // plain substring matching wrongly flagged "veggie" as containing "egg".
+  // Multi-word phrases (e.g. "jacket potato") still match as a substring of
+  // the space-normalised text, since they can't collide with a shorter word
+  // the same way single words can.
+  function guessProteinFromText(text){
+    if(!text) return '';
+    var raw = String(text).toLowerCase();
+    var normalized = ' ' + raw.replace(/[^a-z0-9]+/g, ' ').trim() + ' ';
+    var tokens = {};
+    normalized.trim().split(' ').forEach(function(w){ if(w) tokens[w] = true; });
+    function hasWord(w){
+      if(w.indexOf(' ') !== -1) return normalized.indexOf(' '+w.replace(/[^a-z0-9]+/g, ' ')+' ') !== -1;
+      return !!(tokens[w] || tokens[w+'s'] || tokens[w+'es']);
+    }
+    for(var i=0;i<PROTEIN_GUESS_ORDER.length;i++){
+      var key = PROTEIN_GUESS_ORDER[i];
+      var words = PROTEIN_KEYWORDS[key];
+      for(var j=0;j<words.length;j++){
+        if(hasWord(words[j])) return key;
+      }
+    }
+    return '';
+  }
+  // Only fills the protein dropdown if it's still sitting on the default
+  // "Other" — never overrides a choice someone's actually made, same
+  // fill-if-empty philosophy as the name/photo auto-fill.
+  function applyProteinGuess(nameText, selectId, hintId){
+    var sel = document.getElementById(selectId);
+    if(!sel || sel.value !== 'other') return;
+    var guess = guessProteinFromText(nameText);
+    if(!guess) return;
+    sel.value = guess;
+    var hint = hintId && document.getElementById(hintId);
+    if(hint){
+      hint.textContent = PROTEIN_TYPES[guess].emoji+' Guessed "'+PROTEIN_TYPES[guess].label+'" as the protein from the name — change it under "+ Add a link or tags" if that\'s wrong.';
+      hint.style.display = '';
+    }
+  }
   function tagOf(taxonomy, value, fallback){
     return taxonomy[value] ? value : fallback;
   }
@@ -1073,7 +1129,7 @@
   // auto-fill — Mains and Sides share the same link-row widget, just with
   // different form fields to fill in.
   var LINK_FORM_CONTEXT = {
-    ideaLinksRows: { nameFieldId: 'ideaName', imageFieldId: 'ideaImage', imageWrapId: 'ideaImagePreviewWrap', imageImgId: 'ideaImagePreviewImg' },
+    ideaLinksRows: { nameFieldId: 'ideaName', imageFieldId: 'ideaImage', imageWrapId: 'ideaImagePreviewWrap', imageImgId: 'ideaImagePreviewImg', proteinFieldId: 'ideaProtein', proteinHintId: 'proteinGuessHint' },
     sideLinksRows: { nameFieldId: 'sideName', imageFieldId: 'sideImage', imageWrapId: 'sideImagePreviewWrap', imageImgId: 'sideImagePreviewImg' }
   };
   // The moment someone pastes a link, quietly look up its title/photo and
@@ -1110,6 +1166,12 @@
         if(imageField && !imageField.value && data.image){
           setImagePreview(ctx.imageFieldId, ctx.imageWrapId, ctx.imageImgId, data.image);
           filledImage = true;
+        }
+        // Also take a stab at the protein tag from whatever the name field
+        // ends up holding (freshly pulled title, or something typed before
+        // the link went in) — Mains only, Sides has no protein field.
+        if(ctx.proteinFieldId && nameField){
+          applyProteinGuess(nameField.value, ctx.proteinFieldId, ctx.proteinHintId);
         }
         statusEl.textContent = (filledName || filledImage)
           ? '✅ Pulled ' + (filledName && filledImage ? 'a title & photo' : filledName ? 'a title' : 'a photo') + ' from that link'
@@ -1263,6 +1325,10 @@
     document.getElementById('ideaMoreDetails').style.display = open ? '' : 'none';
     document.getElementById('toggleIdeaDetailsBtn').textContent = open ? '− Hide link/tags' : '+ Add a link or tags (optional)';
   }
+  function hideProteinGuessHint(){
+    var hint = document.getElementById('proteinGuessHint');
+    if(hint) hint.style.display = 'none';
+  }
   // Shows/hides the little thumbnail + hidden value together, so the form
   // and the data always agree on whether there's a cover photo.
   function setImagePreview(hiddenFieldId, wrapId, imgId, url){
@@ -1288,6 +1354,7 @@
     document.getElementById('cancelEditBtn').style.display = 'none';
     document.getElementById('deleteIdeaWrap').style.display = 'none';
     setIdeaDetailsOpen(false);
+    hideProteinGuessHint();
   }
   function editIdea(id){
     var idea = state.ideas[id];
@@ -1304,6 +1371,7 @@
     document.getElementById('cancelEditBtn').style.display = '';
     document.getElementById('deleteIdeaWrap').style.display = '';
     setIdeaDetailsOpen(true); // always show details while editing, so nothing's hidden away
+    hideProteinGuessHint();
     var formCard = document.querySelector('#view-vote .card');
     if(formCard && formCard.scrollIntoView) formCard.scrollIntoView({behavior:'smooth', block:'start'});
   }
@@ -2736,6 +2804,13 @@
   });
   document.getElementById('addLinkRowBtn').addEventListener('click', function(){ addLinkRow(); });
   document.getElementById('cancelEditBtn').addEventListener('click', function(){ resetIdeaForm(); });
+  // Guess the protein straight from whatever's typed, even with no link at
+  // all — covers "I just typed Salmon leek bake and want it categorised".
+  document.getElementById('ideaName').addEventListener('blur', function(){
+    applyProteinGuess(document.getElementById('ideaName').value, 'ideaProtein', 'proteinGuessHint');
+  });
+  // Once someone's touched the dropdown themselves, the guess note is stale — drop it.
+  document.getElementById('ideaProtein').addEventListener('change', hideProteinGuessHint);
   document.getElementById('deleteIdeaLink').addEventListener('click', function(e){
     e.preventDefault();
     if(!editingIdeaId) return;
