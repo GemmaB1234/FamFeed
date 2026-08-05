@@ -55,6 +55,9 @@ module.exports = async (req, res) => {
             protein: idea.protein || 'other',
             effort: idea.effort || 'medium',
             cuisine: idea.cuisine || 'other',
+            // cover photo — either auto-pulled from a pasted link, or left blank
+            // and shown as a plain placeholder tile
+            image: idea.image || '',
           }),
         });
         break;
@@ -166,7 +169,7 @@ module.exports = async (req, res) => {
           ? normalizeLinks(side.links)
           : [{ type: 'other', note: '' }];
         await kv.hset('sides', {
-          [id]: JSON.stringify({ name: side.name || '', links }),
+          [id]: JSON.stringify({ name: side.name || '', links, image: side.image || '' }),
         });
         break;
       }
