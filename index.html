@@ -454,11 +454,32 @@
   .side-row-name{ font-weight:700; margin-right:auto; }
   .side-row-actions{ display:flex; gap:4px; }
   .side-select{ margin-top:8px; }
-  .side-check-list{ display:flex; flex-wrap:wrap; gap:6px 12px; }
-  .side-check{
-    display:inline-flex; align-items:center; gap:5px; font-size:0.85rem;
-    background:#F6F5FA; padding:5px 10px; border-radius:999px; cursor:pointer;
+  /* Compact per-night side picker — a plain checkbox per side doesn't scale
+     once the sides library gets big, so each night just shows chips for
+     whatever's already attached plus a button that opens a searchable picker. */
+  .side-chip-row{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px; }
+  .side-chip{
+    display:inline-flex; align-items:center; gap:2px; background:#F1EAFB; color:var(--grape);
+    border-radius:999px; padding:5px 4px 5px 12px; font-size:0.82rem; font-weight:700;
   }
+  .side-chip-remove{
+    background:none; border:none; cursor:pointer; font-size:0.8rem; color:var(--grape);
+    opacity:0.65; padding:4px 8px; line-height:1;
+  }
+  .side-chip-remove:hover{ opacity:1; }
+  .side-add-btn{ padding:6px 12px; font-size:0.82rem; border-radius:999px; }
+
+  /* Side picker modal */
+  .side-picker-modal{ text-align:left; max-width:420px; max-height:80vh; overflow-y:auto; }
+  #sidePickerSearch{ width:100%; margin-top:8px; box-sizing:border-box; }
+  .side-picker-row{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:10px 8px;
+    border:none; background:none; border-radius:10px; cursor:pointer; font-size:0.95rem; font-weight:600;
+    color:var(--ink); margin-bottom:2px;
+  }
+  .side-picker-row:hover{ background:#F7F2FD; }
+  .side-picker-row.checked{ background:#EFE6FC; }
+  .side-picker-check{ font-size:1rem; flex:none; }
 
   /* Shopping list */
   .add-item-form{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
@@ -581,6 +602,16 @@
   <div class="more-sheet idea-detail-modal">
     <button type="button" class="more-sheet-close" id="ideaDetailCloseBtn" title="Close">✕</button>
     <div id="ideaDetailBody"></div>
+  </div>
+</div>
+
+<!-- SIDE PICKER MODAL (opened by a night's "+ Add side" button in the Planner) -->
+<div class="more-sheet-overlay" id="sidePickerOverlay" style="display:none; align-items:center;">
+  <div class="more-sheet side-picker-modal">
+    <button type="button" class="more-sheet-close" id="sidePickerCloseBtn" title="Close">✕</button>
+    <div class="more-sheet-title" id="sidePickerTitle">🍚 Add a side</div>
+    <input type="text" id="sidePickerSearch" placeholder="🔍 Search sides…">
+    <div id="sidePickerList" style="margin-top:10px;"></div>
   </div>
 </div>
 
@@ -734,6 +765,7 @@
         <button class="btn" id="addSideBtn">Add side</button>
         <button type="button" class="btn secondary" id="cancelSideEditBtn" style="display:none;">Cancel edit</button>
       </div>
+      <input type="text" id="sideSearch" placeholder="🔍 Search sides…" style="margin-top:10px;">
       <div id="sidesList" style="margin-top:12px;"></div>
     </div>
   </section>
@@ -1397,13 +1429,23 @@
     document.getElementById('addSideBtn').textContent = 'Save changes';
     document.getElementById('cancelSideEditBtn').style.display = '';
   }
+  var sideSearchText = '';
   function renderSides(){
     var el = document.getElementById('sidesList');
     if(!el) return;
     if(isFocusWithin(document.getElementById('sideForm'))) return;
-    var ids = Object.keys(state.sides || {});
-    if(ids.length === 0){
+    var allIds = Object.keys(state.sides || {});
+    if(allIds.length === 0){
       el.innerHTML = '<div class="sub" style="margin-top:8px;">No sides added yet — things like egg fried rice or garlic bread that go with lots of different mains.</div>';
+      return;
+    }
+    var searchLower = sideSearchText.trim().toLowerCase();
+    var ids = allIds.filter(function(id){
+      return !searchLower || (state.sides[id].name || '').toLowerCase().indexOf(searchLower) !== -1;
+    });
+    ids.sort(function(a,b){ return (state.sides[a].name||'').localeCompare(state.sides[b].name||''); });
+    if(ids.length === 0){
+      el.innerHTML = '<div class="sub" style="margin-top:8px;">No sides match that search.</div>';
       return;
     }
     el.innerHTML = ids.map(function(id){
@@ -1727,6 +1769,67 @@
     meal.sideIds = ids;
     meal.sideNames = sideNamesFor(ids);
     return sendAction({type:'toggleMealSide', date:dateStr, sideId:sideId, on:!!on});
+  }
+
+  // ---------- Side picker modal (opened by a night's "+ Add side" button) ----------
+  // Keeps the Planner scannable once the sides library gets big — rather than
+  // a checkbox per side on every single night, each night just shows chips
+  // for what's attached, and this searchable list handles adding more.
+  var sidePickerDate = null;
+  var sidePickerSearchText = '';
+  function openSidePicker(dateStr){
+    sidePickerDate = dateStr;
+    sidePickerSearchText = '';
+    var search = document.getElementById('sidePickerSearch');
+    if(search) search.value = '';
+    var title = document.getElementById('sidePickerTitle');
+    if(title) title.textContent = '🍚 Add a side — ' + dayLabel(dateStr);
+    renderSidePicker();
+    document.getElementById('sidePickerOverlay').style.display = 'flex';
+  }
+  function closeSidePicker(){
+    sidePickerDate = null;
+    document.getElementById('sidePickerOverlay').style.display = 'none';
+  }
+  function renderSidePicker(){
+    var listEl = document.getElementById('sidePickerList');
+    if(!listEl || !sidePickerDate) return;
+    var meal = state.meals[sidePickerDate];
+    var currentIds = sideIdsOfMeal(meal);
+    var allIds = Object.keys(state.sides || {});
+    if(allIds.length === 0){
+      listEl.innerHTML = '<div class="sub">No sides in your library yet — add some from the 🍚 Sides tab first.</div>';
+      return;
+    }
+    var searchLower = sidePickerSearchText.trim().toLowerCase();
+    var ids = allIds.filter(function(id){
+      return !searchLower || (state.sides[id].name || '').toLowerCase().indexOf(searchLower) !== -1;
+    });
+    ids.sort(function(a,b){ return (state.sides[a].name||'').localeCompare(state.sides[b].name||''); });
+    if(ids.length === 0){
+      listEl.innerHTML = '<div class="sub">No sides match that search.</div>';
+      return;
+    }
+    listEl.innerHTML = ids.map(function(id){
+      var s = state.sides[id];
+      var on = currentIds.indexOf(id) !== -1;
+      return '<button type="button" class="side-picker-row'+(on?' checked':'')+'" data-pick-side="'+id+'">' +
+        '<span class="side-picker-check">'+(on?'✅':'➕')+'</span>' +
+        '<span>'+escapeHtml(s.name)+'</span>' +
+      '</button>';
+    }).join('');
+    listEl.querySelectorAll('[data-pick-side]').forEach(function(btn){
+      btn.onclick = function(){
+        var sideId = btn.getAttribute('data-pick-side');
+        var isOn = btn.classList.contains('checked');
+        toggleMealSide(sidePickerDate, sideId, !isOn);
+        renderSidePicker();
+        renderPlanner();
+        renderDashboard();
+        renderCalendar();
+        renderHome();
+      };
+    });
   }
   function addSafeFood(id, name){
     state.safeFoods[id] = name;
@@ -2375,16 +2478,23 @@
           '<select class="assign-select backup-select" data-backup-date="'+dateStr+'">'+backupOptions+'</select>'
         : '';
 
-      var sideIds = Object.keys(state.sides || {});
+      // A checkbox per side (repeated on every one of the 14 nights) stopped
+      // scaling once the sides library grew — instead each night just shows
+      // chips for whatever's already attached, with a button that opens a
+      // searchable picker to add more (or remove one straight off the chip).
+      var sideLibraryIds = Object.keys(state.sides || {});
       var currentSideIds = sideIdsOfMeal(meal);
-      var sideChecksHtml = sideIds.map(function(id){
+      var sideChipsHtml = currentSideIds.map(function(id){
         var s = state.sides[id];
-        var checked = currentSideIds.indexOf(id) !== -1;
-        return '<label class="side-check"><input type="checkbox" data-side-date="'+dateStr+'" data-side-id="'+id+'" '+(checked?'checked':'')+'>'+escapeHtml(s.name)+'</label>';
+        if(!s) return '';
+        return '<span class="side-chip">'+escapeHtml(s.name)+
+          '<button type="button" class="side-chip-remove" data-side-date="'+dateStr+'" data-side-id="'+id+'" title="Remove this side">✕</button></span>';
       }).join('');
-      var sideHtml = sideIds.length
-        ? '<div class="sub" style="margin:8px 0 2px;">🍚 Side dish(es) — pick as many as you like:</div>' +
-          '<div class="side-check-list">'+sideChecksHtml+'</div>'
+      var sideHtml = sideLibraryIds.length
+        ? '<div class="sub" style="margin:8px 0 2px;">🍚 Side dish(es):</div>' +
+          '<div class="side-chip-row">'+sideChipsHtml+
+            '<button type="button" class="btn secondary side-add-btn" data-open-side-picker="'+dateStr+'">+ Add side</button>' +
+          '</div>'
         : '';
 
       return '<div class="day-card" id="daycard-'+dateStr+'" data-day-date="'+dateStr+'">' +
@@ -2418,15 +2528,20 @@
         renderCalendar();
       });
     });
-    el.querySelectorAll('input[data-side-date]').forEach(function(cb){
-      cb.addEventListener('change', function(){
-        var dateStr = cb.getAttribute('data-side-date');
-        var sideId = cb.getAttribute('data-side-id');
-        toggleMealSide(dateStr, sideId, cb.checked);
+    el.querySelectorAll('.side-chip-remove').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var dateStr = btn.getAttribute('data-side-date');
+        var sideId = btn.getAttribute('data-side-id');
+        toggleMealSide(dateStr, sideId, false);
         renderPlanner();
         renderDashboard();
         renderCalendar();
         renderHome();
+      });
+    });
+    el.querySelectorAll('[data-open-side-picker]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        openSidePicker(btn.getAttribute('data-open-side-picker'));
       });
     });
     el.querySelectorAll('[data-wheel-date]').forEach(function(btn){
@@ -2795,6 +2910,15 @@
     if (e.target.id === 'ideaDetailOverlay') closeIdeaDetail();
   });
 
+  document.getElementById('sidePickerCloseBtn').addEventListener('click', closeSidePicker);
+  document.getElementById('sidePickerOverlay').addEventListener('click', function(e){
+    if (e.target.id === 'sidePickerOverlay') closeSidePicker();
+  });
+  document.getElementById('sidePickerSearch').addEventListener('input', function(e){
+    sidePickerSearchText = e.target.value;
+    renderSidePicker();
+  });
+
   // ---------- Add idea / item / member ----------
   renderLinkRows([{type:'other', note:''}]); // seed the first link row on page load
   setIdeaDetailsOpen(false);
@@ -2878,6 +3002,10 @@
   document.getElementById('ideaSearch').addEventListener('input', function(e){
     ideaSearchText = e.target.value;
     renderVote();
+  });
+  document.getElementById('sideSearch').addEventListener('input', function(e){
+    sideSearchText = e.target.value;
+    renderSides();
   });
   document.getElementById('filterProtein').addEventListener('change', function(e){
     proteinFilter = e.target.value;
