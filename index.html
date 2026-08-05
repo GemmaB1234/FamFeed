@@ -237,6 +237,17 @@
   .assign-select{
     width:100%; padding:9px 12px; border-radius:10px; border:1px solid #EEE3F5; font-size:0.92rem;
   }
+  /* Planner lock — an assigned night's dropdown is hidden behind an explicit
+     unlock tap instead of sitting there freely editable, so a settled plan
+     doesn't get changed by accident. */
+  .planner-locked-row{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:9px 12px; border-radius:10px; background:#F7F4FC;
+  }
+  .planner-locked-name{ font-weight:700; flex:1; min-width:0; }
+  .planner-unlock-btn, .planner-relock-btn{ padding:6px 12px; font-size:0.82rem; border-radius:999px; flex:none; }
+  .planner-unlocked-row{ display:flex; align-items:center; gap:6px; }
+  .planner-unlocked-row .assign-select{ flex:1; width:auto; }
   .filter-row{ display:flex; gap:8px; flex-wrap:wrap; }
   .filter-btn{
     border:none; background:#F6F5FA; color:var(--ink); padding:7px 14px; border-radius:999px;
@@ -2414,6 +2425,11 @@
   });
 
   // ---------- Render: Planner ----------
+  // Once a night has something assigned, its dropdown is locked behind an
+  // explicit "🔓 Change" tap rather than sitting there freely editable —
+  // makes it much harder to fat-finger a change to a plan that's already
+  // settled. Purely a client-side UI guard (resets on reload), not synced.
+  var unlockedPlannerDates = {};
   function renderPlanner(){
     var el = document.getElementById('plannerGrid');
     if(isFocusWithin(el)) { document.getElementById('shareLink').textContent = window.location.href.split('#')[0]; return; }
@@ -2431,6 +2447,22 @@
       }).join('');
       var sourceHtml = meal ? '<div style="margin-top:8px;">'+categoryBadge(meal)+'<span class="meal-source">'+sourceLabel(meal.sourceType)+
         (meal.sourceNote ? ' — '+escapeHtml(meal.sourceNote) : '')+'</span></div>' : '';
+
+      // Locked whenever something's assigned and hasn't been explicitly
+      // unlocked for this render cycle — an empty night is always freely
+      // editable since there's nothing settled yet to protect.
+      var isLocked = !!(meal && meal.ideaId) && !unlockedPlannerDates[dateStr];
+      var assignFieldHtml = isLocked
+        ? '<div class="planner-locked-row">' +
+            '<div class="planner-locked-name">'+categoryBadge(meal)+' '+escapeHtml(meal.name)+'</div>' +
+            '<button type="button" class="btn secondary planner-unlock-btn" data-unlock-date="'+dateStr+'">🔓 Change</button>' +
+          '</div>'
+        : '<div class="planner-unlocked-row">' +
+            '<select class="assign-select" data-date="'+dateStr+'">'+options+'</select>' +
+            (meal && meal.ideaId
+              ? '<button type="button" class="btn secondary planner-relock-btn" data-relock-date="'+dateStr+'" title="Keep the current plan">🔒 Cancel</button>'
+              : '') +
+          '</div>';
 
       // Voting happens here, on what's actually planned — not on the idea
       // pool — so it only shows up once a night has something assigned.
@@ -2478,11 +2510,17 @@
           '</div>'
         : '';
 
+      // The spin trigger would otherwise be a back door around the lock —
+      // no point locking the dropdown if a re-spin can still silently
+      // overwrite a settled night, so it only shows up while unlocked.
+      var wheelTriggerHtml = isLocked ? '' :
+        '<button type="button" class="wheel-trigger" data-wheel-date="'+dateStr+'" title="Spin for this night">🎲</button>';
+
       return '<div class="day-card" id="daycard-'+dateStr+'" data-day-date="'+dateStr+'">' +
         '<div class="day-label">'+dayLabel(dateStr)+
-          '<button type="button" class="wheel-trigger" data-wheel-date="'+dateStr+'" title="Spin for this night">🎲</button>' +
+          wheelTriggerHtml +
         '</div>' +
-        '<select class="assign-select" data-date="'+dateStr+'">'+options+'</select>' +
+        assignFieldHtml +
         sourceHtml +
         voteHtml +
         backupHtml +
@@ -2490,24 +2528,25 @@
       '</div>';
     }).join('');
 
+    el.querySelectorAll('[data-unlock-date]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        unlockedPlannerDates[btn.getAttribute('data-unlock-date')] = true;
+        btn.blur(); // renderPlanner() bails out early while focus sits inside plannerGrid
+        renderPlanner();
+      });
+    });
+    el.querySelectorAll('[data-relock-date]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        delete unlockedPlannerDates[btn.getAttribute('data-relock-date')];
+        btn.blur();
+        renderPlanner();
+      });
+    });
     el.querySelectorAll('.assign-select[data-date]').forEach(function(sel){
       sel.addEventListener('change', function(){
         var dateStr = sel.getAttribute('data-date');
         var newIdeaId = sel.value || null;
-        var existingMeal = state.meals[dateStr];
-        // A night that already has something on it is "complete" enough to
-        // deserve a speed bump — easy to fat-finger the dropdown otherwise,
-        // and changing the dish clears whatever votes were already cast.
-        if(existingMeal && existingMeal.ideaId && existingMeal.ideaId !== newIdeaId){
-          var oldName = existingMeal.name || 'the current plan';
-          var msg = newIdeaId
-            ? 'Change ' + dayLabel(dateStr) + ' from "' + oldName + '" to something else? Any votes on the current plan will be cleared.'
-            : 'Clear the plan for ' + dayLabel(dateStr) + ' ("' + oldName + '")? This removes it from the calendar and clears any votes.';
-          if(!window.confirm(msg)){
-            sel.value = existingMeal.ideaId; // revert the dropdown back to what it was
-            return;
-          }
-        }
+        delete unlockedPlannerDates[dateStr]; // a choice was made — lock it back down
         assignMeal(dateStr, newIdeaId);
         renderPlanner();
         renderDashboard();
