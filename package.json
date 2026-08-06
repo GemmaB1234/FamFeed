@@ -7,5 +7,12 @@
   },
   "dependencies": {
     "ioredis": "^5.11.1"
+  },
+  "devDependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0"
   }
 }
