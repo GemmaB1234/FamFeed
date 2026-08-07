@@ -7,7 +7,7 @@ class MainViewController: CAPBridgeViewController {
             print("🔌🔌🔌 bridge is NIL")
         } else {
             print("🔌🔌🔌 bridge exists — registering plugin now")
-            bridge?.registerPluginType(SharedContentPlugin.self)
+            bridge?.registerPluginInstance(SharedContentPlugin())
             print("🔌🔌🔌 registerPluginType finished")
         }
     }

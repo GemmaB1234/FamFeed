@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		20A95B6F3024E02E00838007 /* FamFeedShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 20A95B653024E02E00838007 /* FamFeedShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		20A95B7D3024EF6600838007 /* SharedContentPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 20A95B7B3024EF6600838007 /* SharedContentPlugin.m */; };
 		20A95B7E3024EF6600838007 /* SharedContentPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A95B7C3024EF6600838007 /* SharedContentPlugin.swift */; };
 		20A95B853025DDB000838007 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A95B843025DD8A00838007 /* MainViewController.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
@@ -49,7 +48,6 @@
 /* Begin PBXFileReference section */
 		20A95B653024E02E00838007 /* FamFeedShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FamFeedShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		20A95B793024EA6600838007 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
-		20A95B7B3024EF6600838007 /* SharedContentPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharedContentPlugin.m; sourceTree = "<group>"; };
 		20A95B7C3024EF6600838007 /* SharedContentPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedContentPlugin.swift; sourceTree = "<group>"; };
 		20A95B843025DD8A00838007 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
@@ -131,7 +129,6 @@
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
-				20A95B7B3024EF6600838007 /* SharedContentPlugin.m */,
 				20A95B7C3024EF6600838007 /* SharedContentPlugin.swift */,
 			);
 			path = App;
@@ -261,7 +258,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				20A95B7D3024EF6600838007 /* SharedContentPlugin.m in Sources */,
 				20A95B7E3024EF6600838007 /* SharedContentPlugin.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,

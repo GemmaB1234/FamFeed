@@ -2972,8 +2972,10 @@
     }).catch(function(){ /* nothing pending, or plugin unavailable — quietly ignore */ });
   }
   checkForSharedContent();
-  (function(){
-    var appPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+setTimeout(checkForSharedContent, 500);
+setTimeout(checkForSharedContent, 1500);
+(function(){
+  var appPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
     if(appPlugin && appPlugin.addListener){
       appPlugin.addListener('appUrlOpen', function(){ checkForSharedContent(); });
     }
