@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fam Feed — Meal Planner</title>
-
 <style>
   :root{
     --sunset:#FF6B4A;
@@ -93,7 +92,6 @@
   }
   .bottom-nav button .bn-icon{ font-size:1.35rem; line-height:1; }
   .bottom-nav button.active{ color:var(--grape); background:#F5F0FC; }
-
   /* More sheet — the rest of the tabs, one tap away */
   .more-sheet-overlay{
     position:fixed; inset:0; background:rgba(30,15,45,0.5); display:flex;
@@ -116,7 +114,6 @@
   }
   .more-sheet-item:hover{ background:#EFE6FC; }
   .more-sheet-item:last-child{ margin-bottom:0; }
-
   /* Home view */
   .home-hero{ text-align:center; }
   .home-greeting{ color:var(--muted); font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
@@ -137,7 +134,6 @@
   }
   .home-shortcut:hover{ transform:translateY(-2px); }
   .home-shortcut-icon{ font-size:1.6rem; }
-
   /* Quick Plan (reuses the spin modal shell) */
   .quick-plan-picks{ display:flex; flex-direction:column; gap:8px; margin:14px 0; max-height:280px; overflow-y:auto; }
   .quick-plan-pick{
@@ -147,7 +143,6 @@
   }
   .quick-plan-pick:hover{ background:#EFE6FC; }
   .quick-plan-pick-name{ flex:1; }
-
   main{
     max-width:900px;
     margin:0 auto;
@@ -156,7 +151,6 @@
   .view{ display:none; }
   .view.active{ display:block; animation:fade .25s ease; }
   @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
-
   .card{
     background:var(--card);
     border-radius:var(--radius);
@@ -166,7 +160,6 @@
   }
   .card h2{ margin:0 0 4px; font-size:1.15rem; }
   .card .sub{ color:var(--muted); font-size:0.85rem; margin-bottom:14px; }
-
   /* Who are you picker */
   #whoBar{
     display:flex;
@@ -190,7 +183,6 @@
     font-weight:700;
     font-size:0.9rem;
   }
-
   /* Vote view */
   .meal-vote-card{
     display:flex;
@@ -275,7 +267,6 @@
   .filter-row select, .filter-row input[type=text]{
     padding:6px 10px; border-radius:999px; border:1px solid #EEE3F5; font-size:0.82rem;
   }
-
   /* Mains photo-card grid — visual, scrollable, fun to browse */
   .idea-grid{
     display:grid; grid-template-columns:repeat(auto-fill, minmax(148px, 1fr)); gap:12px;
@@ -302,7 +293,6 @@
     padding:9px 10px 11px; font-weight:700; font-size:0.88rem; line-height:1.25;
     flex:1; display:flex; align-items:center;
   }
-
   /* Idea detail modal — opened by tapping a photo card */
   .idea-detail-modal{ text-align:left; max-width:440px; max-height:82vh; overflow-y:auto; }
   .idea-detail-img{
@@ -311,7 +301,6 @@
   }
   .idea-detail-img.idea-photo-card-placeholder{ margin:-16px -16px 12px; width:calc(100% + 32px); height:180px; font-size:3.4rem; }
   .idea-detail-name{ font-size:1.25rem; font-weight:800; margin-bottom:6px; }
-
   /* Calendar */
   .calendar-grid{
     display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px; margin-bottom:6px;
@@ -332,7 +321,6 @@
   .cal-cell:hover{ transform:translateY(-3px) scale(1.02); box-shadow:0 8px 18px rgba(43,33,64,0.14); }
   .cal-cell:active{ transform:translateY(-1px) scale(0.99); }
   .cal-cell.empty{ visibility:hidden; cursor:default; box-shadow:none; }
-
   .cal-cell.has-meal.new{ background:linear-gradient(165deg, #FFF3E9, #fff 70%); border-color:#FFDCC2; }
   .cal-cell.has-meal.safe{ background:linear-gradient(165deg, #E9FBF6, #fff 70%); border-color:#BEEEE1; }
   .cal-cell.has-meal.new::before, .cal-cell.has-meal.safe::before{
@@ -340,12 +328,10 @@
   }
   .cal-cell.has-meal.new::before{ background:linear-gradient(90deg, var(--sunset), var(--tangerine)); }
   .cal-cell.has-meal.safe::before{ background:linear-gradient(90deg, var(--teal), #6FE0CB); }
-
   .cal-cell.empty-day{ background:#FBFAFD; border:1.5px dashed #E4DCF2; box-shadow:none; }
   .cal-cell.empty-day:hover{ border-color:var(--grape); background:#F7F2FD; }
   .cal-add-hint{ color:var(--muted); font-size:0.68rem; font-weight:700; margin-top:2px; }
   .cal-cell.empty-day:hover .cal-add-hint{ color:var(--grape); }
-
   .cal-cell.today{
     background:linear-gradient(165deg, #F6EEFF, #fff 75%);
     box-shadow:0 0 0 2px var(--grape), 0 8px 18px rgba(142,92,247,0.25);
@@ -356,7 +342,6 @@
     background:linear-gradient(90deg, var(--sunset), var(--grape)); padding:1px 5px; border-radius:999px;
     line-height:1.4;
   }
-
   .cal-daynum{ font-weight:800; font-size:0.9rem; }
   .cal-meal{
     font-size:0.65rem; line-height:1.2; padding:2px 4px; border-radius:6px; width:100%; min-width:0; box-sizing:border-box;
@@ -386,12 +371,10 @@
     font-size:0.8rem; padding:3px 10px; border-radius:999px; background:#E8F9F5; color:var(--teal);
   }
   .backup-select{ margin-top:8px; }
-
   /* Ingredient pulling */
   .ingredient-panel{ margin-top:12px; padding-top:12px; border-top:1px dashed #EEE3F5; }
   .ingredient-line{ display:block; font-size:0.9rem; padding:4px 0; }
   .ingredient-line input{ margin-right:8px; }
-
   /* Weekly shopping / archive */
   .week-header{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin:18px 0 10px; }
   .week-header:first-child{ margin-top:0; }
@@ -405,7 +388,6 @@
   .archive-entry-items.open{ display:block; }
   .archive-item-line{ font-size:0.85rem; padding:3px 0; color:var(--ink); }
   .archive-item-line.was-checked{ color:var(--muted); text-decoration:line-through; }
-
   /* Planner grid */
   .day-grid{ display:grid; grid-template-columns:1fr; gap:12px; }
   .day-card{
@@ -483,7 +465,6 @@
   }
   .side-chip-remove:hover{ opacity:1; }
   .side-add-btn{ padding:6px 12px; font-size:0.82rem; border-radius:999px; }
-
   /* Side picker modal */
   .side-picker-modal{ text-align:left; max-width:420px; max-height:80vh; overflow-y:auto; }
   #sidePickerSearch{ width:100%; margin-top:8px; box-sizing:border-box; }
@@ -495,7 +476,6 @@
   .side-picker-row:hover{ background:#F7F2FD; }
   .side-picker-row.checked{ background:#EFE6FC; }
   .side-picker-check{ font-size:1rem; flex:none; }
-
   /* Shopping list */
   .add-item-form{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
   .add-item-form input, .add-item-form select{
@@ -521,7 +501,6 @@
   .item-name{ flex:1; }
   .item-qty{ color:var(--muted); font-size:0.85rem; }
   .item-row button{ background:none; border:none; color:var(--no); cursor:pointer; font-size:1rem; }
-
   /* Dashboard */
   .flag{
     background:#FFEBEF; color:#C4245C; padding:4px 10px; border-radius:999px;
@@ -530,23 +509,19 @@
   .bar-row{ display:flex; align-items:center; gap:8px; margin-top:6px; }
   .bar{ flex:1; height:10px; border-radius:6px; background:#F0EDF6; overflow:hidden; display:flex; }
   .bar span{ height:100%; }
-
   /* Household */
   .member-chip{
     display:inline-flex; align-items:center; gap:8px; background:#F5F1FB; color:var(--grape);
     padding:6px 12px; border-radius:999px; margin:4px 6px 4px 0; font-weight:600; font-size:0.88rem;
   }
   .member-chip button{ background:none; border:none; color:var(--no); cursor:pointer; font-weight:900; }
-
   .link-box{
     display:flex; gap:8px; align-items:center; flex-wrap:wrap;
     background:#F5F1FB; padding:10px 14px; border-radius:12px;
   }
   .link-box code{ flex:1; word-break:break-all; font-size:0.85rem; }
-
   .empty-hint{ color:var(--muted); font-size:0.88rem; text-align:center; padding:20px; }
   footer.note{ text-align:center; color:var(--muted); font-size:0.78rem; padding:24px 16px; }
-
   /* Wheel randomiser */
   .wheel-week-btns{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
   .wheel-overlay{
@@ -586,17 +561,14 @@
 </style>
 </head>
 <body>
-
 <header class="top">
   <button type="button" id="howItWorksBtn" class="how-it-works-btn" title="How this works">ℹ️</button>
   <h1>🍽️ Fam Feed</h1>
   <p>Two weeks of dinners. Zero arguments (well — fewer).</p>
 </header>
-
 <div id="demoBanner" class="demo-banner" style="display:none;">
   Running locally without a live backend — deploy to Vercel (see SETUP.md) so votes actually sync across everyone's phones.
 </div>
-
 <!-- HOW IT WORKS MODAL -->
 <div class="more-sheet-overlay" id="howItWorksOverlay" style="display:none; align-items:center;">
   <div class="more-sheet how-it-works-modal">
@@ -611,7 +583,6 @@
     <button type="button" class="btn" id="howItWorksGotItBtn" style="margin-top:6px;">Got it!</button>
   </div>
 </div>
-
 <!-- IDEA DETAIL MODAL (opened by tapping a Mains photo card) -->
 <div class="more-sheet-overlay" id="ideaDetailOverlay" style="display:none; align-items:center;">
   <div class="more-sheet idea-detail-modal">
@@ -619,7 +590,6 @@
     <div id="ideaDetailBody"></div>
   </div>
 </div>
-
 <!-- SIDE PICKER MODAL (opened by a night's "+ Add side" button in the Planner) -->
 <div class="more-sheet-overlay" id="sidePickerOverlay" style="display:none; align-items:center;">
   <div class="more-sheet side-picker-modal">
@@ -629,11 +599,8 @@
     <div id="sidePickerList" style="margin-top:10px;"></div>
   </div>
 </div>
-
-
 <main>
   <div id="whoBar"></div>
-
   <!-- HOME VIEW — the app's landing screen: today's plan, this week's progress,
        shopping snapshot and quick actions, so there's somewhere glanceable to
        land instead of jumping straight into a list. -->
@@ -661,7 +628,6 @@
       <button type="button" class="home-shortcut" data-view="sides"><span class="home-shortcut-icon">🍚</span><span>Sides Library</span></button>
     </div>
   </section>
-
   <!-- VOTE VIEW (a.k.a. "Mains" — the "Can We Have?" idea pool) -->
   <section id="view-vote" class="view">
     <div class="card">
@@ -740,7 +706,6 @@
     </div>
     <div id="voteList"></div>
   </section>
-
   <!-- SIDES VIEW -->
   <section id="view-sides" class="view">
     <div class="card">
@@ -763,7 +728,6 @@
       <div id="sidesList" style="margin-top:12px;"></div>
     </div>
   </section>
-
   <!-- PLANNER VIEW -->
   <section id="view-planner" class="view">
     <div class="card">
@@ -789,7 +753,6 @@
       </div>
     </div>
   </section>
-
   <!-- SHOPPING VIEW -->
   <section id="view-shopping" class="view">
     <div class="card">
@@ -817,7 +780,6 @@
       <div id="shoppingLists" style="margin-top:8px;"></div>
     </div>
   </section>
-
   <!-- ARCHIVE VIEW -->
   <section id="view-archive" class="view">
     <div class="card">
@@ -826,7 +788,6 @@
       <div id="archiveList"></div>
     </div>
   </section>
-
   <!-- DASHBOARD VIEW -->
   <section id="view-dashboard" class="view">
     <div class="card">
@@ -835,7 +796,6 @@
       <div id="dashboardList"></div>
     </div>
   </section>
-
   <!-- HOUSEHOLD VIEW -->
   <section id="view-household" class="view">
     <div class="card">
@@ -858,7 +818,6 @@
     </div>
   </section>
 </main>
-
 <!-- BOTTOM NAV — thumb-reachable core tabs, with less-used views tucked under More -->
 <nav class="bottom-nav">
   <button data-view="home" class="active"><span class="bn-icon">🏠</span><span class="bn-label">Home</span></button>
@@ -867,7 +826,6 @@
   <button data-view="shopping"><span class="bn-icon">🛒</span><span class="bn-label">Shopping</span></button>
   <button type="button" id="moreNavBtn"><span class="bn-icon">⋯</span><span class="bn-label">More</span></button>
 </nav>
-
 <!-- MORE SHEET — Sides / Archive / Votes / Household live here to keep the
      bottom nav itself down to a thumb-friendly five buttons -->
 <div class="more-sheet-overlay" id="moreSheetOverlay" style="display:none;">
@@ -880,7 +838,6 @@
     <button type="button" class="more-sheet-item" data-view="household">👪 Household</button>
   </div>
 </div>
-
 <!-- WHEEL RANDOMISER MODAL -->
 <div class="wheel-overlay" id="wheelOverlay" style="display:none;">
   <div class="wheel-modal">
@@ -888,13 +845,10 @@
     <div id="wheelBody"></div>
   </div>
 </div>
-
 <footer class="note">Fam Feed · built for slightly chaotic family life</footer>
-
 <script>
 (function(){
   "use strict";
-
   // ---------- Setup: demo mode vs real backend ----------
   // "Demo mode" = running the file straight off disk (file://) with no
   // /api routes behind it. Once deployed to Vercel, fetch('/api/...')
@@ -903,7 +857,6 @@
   if(isDemo){
     document.getElementById('demoBanner').style.display = 'block';
   }
-
   // ---------- Tiny in-memory store + polling sync via /api ----------
   var state = {
     members: {},       // id -> name
@@ -914,7 +867,6 @@
     safeFoods: {},       // id -> name  (fussy-eater backup foods)
     sides: {}            // id -> {name, links:[{type,note}]}  (reusable side dishes, attachable to any day)
   };
-
   // Generic — works for anything with a .votes map, which by design is now
   // only ever a Planner meal (voting happens on what's actually planned,
   // not on the speculative idea pool).
@@ -927,9 +879,7 @@
   // Suggestions in Mains have no votes to rank by, so they're just ordered
   // alphabetically wherever a list of ideas needs a stable order.
   function ideaNameOf(id){ return (state.ideas[id] && state.ideas[id].name) || ''; }
-
   function uid(){ return Math.random().toString(36).slice(2,10); }
-
   // 14 upcoming dates starting today
   var DATES = [];
   (function(){
@@ -955,7 +905,6 @@
   function weekOfDate(dateStr){
     return WEEK_DATES[1].indexOf(dateStr) !== -1 ? 1 : 2;
   }
-
   var SOURCE_TYPES = [
     {key:'cookbook', label:'📖 Cookbook'},
     {key:'photo', label:'📷 Photo/Screenshot'},
@@ -983,13 +932,11 @@
       return '<option value="'+s.key+'"'+(s.key===selected?' selected':'')+'>'+s.label+'</option>';
     }).join('');
   }
-
   var VOTE_OPTIONS = [
     {key:'yum', emoji:'😋'},
     {key:'meh', emoji:'😐'},
     {key:'no', emoji:'🤢'}
   ];
-
   var IDEA_CATEGORIES = {
     'new':  {emoji:'🎉', label:'Something new'},
     'safe': {emoji:'😌', label:'Old faithful'}
@@ -1004,7 +951,6 @@
   }
   var ideaFilter = 'all'; // 'all' | 'new' | 'safe'
   var ideaViewMode = 'list'; // 'list' | 'protein' — flat scannable list, or grouped into protein sections
-
   var PROTEIN_TYPES = {
     chicken: {emoji:'🍗', label:'Chicken'},
     beef: {emoji:'🐄', label:'Beef'},
@@ -1084,15 +1030,12 @@
     var meta = taxonomy[key];
     return '<span class="tag-pill">'+meta.emoji+' '+meta.label+'</span>';
   }
-
   var ideaSearchText = '';
   var proteinFilter = '';
   var effortFilter = '';
-
   // ---------- Add/edit idea form: link rows ----------
   // null = form is in "add new" mode; otherwise the id of the idea being edited.
   var editingIdeaId = null;
-
   function renderLinkRows(links){
     renderLinkRowsInto('ideaLinksRows', links);
   }
@@ -1160,7 +1103,6 @@
     if(!/^https?:\/\//i.test(url)) return;
     if(noteInput.getAttribute('data-preview-fetched-url') === url) return; // unchanged since last try
     noteInput.setAttribute('data-preview-fetched-url', url);
-
     statusEl.textContent = '🔎 Looking up a title & photo…';
     fetch('/api/fetch-link-preview', {
       method: 'POST',
@@ -1400,7 +1342,6 @@
     var formCard = document.querySelector('#view-vote .card');
     if(formCard && formCard.scrollIntoView) formCard.scrollIntoView({behavior:'smooth', block:'start'});
   }
-
   // ---------- Sides library (reusable across many meals) ----------
   var editingSideId = null;
   function sidesOf(side){ return (side && Array.isArray(side.links) && side.links.length) ? side.links : [{type:'other', note:''}]; }
@@ -1476,11 +1417,9 @@
     });
     wireIngredientPanelEvents(el, renderSides);
   }
-
   // ---------- Ingredient pulling panels (per idea, client-side only) ----------
   // ideaId -> {open, manualOpen, manualText:'', week:1, pulls:{linkIdx: {status, ingredients:[{text,checked}], instructions:[]}}}
   var ideaPanels = {};
-
   function getPanel(id){
     if(!ideaPanels[id]) ideaPanels[id] = {open:false, manualOpen:false, manualText:'', week:1, pulls:{}};
     return ideaPanels[id];
@@ -1612,10 +1551,8 @@
       });
     });
   }
-
   // ---------- Backend wiring: poll /api/state, POST /api/action ----------
   var POLL_MS = 2500;
-
   function initSync(){
     if(isDemo){
       seedDemoData();
@@ -1625,7 +1562,6 @@
     fetchState();
     setInterval(fetchState, POLL_MS);
   }
-
   function fetchState(){
     fetch('/api/state', {cache:'no-store'})
       .then(function(r){ return r.json(); })
@@ -1641,7 +1577,6 @@
       })
       .catch(function(err){ console.error('Fam Feed: failed to load state', err); });
   }
-
   function sendAction(payload){
     if(isDemo){ renderAll(); return Promise.resolve(); }
     return fetch('/api/action', {
@@ -1656,7 +1591,6 @@
     })
     .catch(function(err){ console.error('Fam Feed: action failed', err); });
   }
-
   function seedDemoData(){
     var m1 = uid(), m2 = uid(), m3 = uid();
     state.members[m1] = "Mum";
@@ -1679,7 +1613,6 @@
     state.safeFoods[sf2] = "Fish fingers & beans";
     state.meals[DATES[1]].backupFood = "Packet noodles";
   }
-
   function addMember(id, name){
     state.members[id] = name;
     return sendAction({type:'addMember', id:id, name:name});
@@ -1763,7 +1696,6 @@
     meal.sideNames = sideNamesFor(ids);
     return sendAction({type:'toggleMealSide', date:dateStr, sideId:sideId, on:!!on});
   }
-
   // ---------- Side picker modal (opened by a night's "+ Add side" button) ----------
   // Keeps the Planner scannable once the sides library gets big — rather than
   // a checkbox per side on every single night, each night just shows chips
@@ -1910,18 +1842,15 @@
     delete state.archivedLists[id];
     return sendAction({type:'deleteArchive', id:id});
   }
-
   // Skip re-rendering a section while the user has focus inside it —
   // otherwise a poll landing mid-keystroke would wipe what they're typing.
   function isFocusWithin(el){
     return el && document.activeElement && el.contains(document.activeElement);
   }
-
   // ---------- "Who am I" ----------
   var ME_KEY = 'famfeed_me';
   function getMe(){ return localStorage.getItem(ME_KEY) || ''; }
   function setMe(id){ localStorage.setItem(ME_KEY, id); renderWhoBar(); renderAll(); }
-
   function renderWhoBar(){
     var el = document.getElementById('whoBar');
     var me = getMe();
@@ -1944,13 +1873,11 @@
       if(e.target.value) setMe(e.target.value);
     };
   }
-
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
-
   // ---------- Ingredient panel markup helpers ----------
   function weekSelectHtml(id, panel){
     return '<div style="margin:8px 0;"><select data-weeksel="'+id+'">' +
@@ -1996,7 +1923,6 @@
     var panel = getPanel(id);
     var toggleBtn = '<button class="btn secondary" data-toggle="'+id+'" style="margin-top:10px;">🧾 '+(panel.open?'Hide ingredients':'Ingredients')+'</button>';
     if(!panel.open) return toggleBtn;
-
     var links = linksOf(idea);
     // "Pullable" = a real http(s) link we can fetch, or a photo (already read at
     // upload time) — either way there's something worth its own section here.
@@ -2006,14 +1932,11 @@
       var idx = links.indexOf(link);
       return linkPullSectionHtml(id, idx, link, multiple);
     }).join('');
-
     var noLinksHint = pullableLinks.length ? '' : '<div class="sub" style="margin:0 0 4px;">No links saved for this one.</div>';
     var manualToggleBtn = '<button class="btn secondary" data-manualtoggle="'+id+'" style="margin-top:10px;">✍️ '+(panel.manualOpen?'Hide paste box':'Paste ingredients myself')+'</button>';
     var manualSection = panel.manualOpen ? '<div style="margin-top:6px;">'+manualBoxHtml(id, panel)+'</div>' : '';
-
     return toggleBtn + '<div class="ingredient-panel">' + noLinksHint + pullSections + manualToggleBtn + manualSection + '</div>';
   }
-
   // Builds one photo-card tile for the Mains grid — shared by the flat grid
   // and the grouped-by-protein view so both render identically. Tapping a
   // card opens the detail modal (tags, links, edit, ingredients); there's no
@@ -2033,7 +1956,6 @@
       '<div class="idea-photo-card-name">'+escapeHtml(idea.name)+'</div>' +
     '</div>';
   }
-
   // ---------- Idea detail modal (opened by tapping a photo card) ----------
   var openIdeaDetailId = null;
   function openIdeaDetail(id){
@@ -2050,12 +1972,10 @@
     var idea = id && state.ideas[id];
     var body = document.getElementById('ideaDetailBody');
     if(!idea){ closeIdeaDetail(); return; }
-
     var sourceHtml = linksOf(idea).map(function(link){
       return '<span class="meal-source">'+sourceLabel(link.type)+(link.note ? ' — '+escapeHtml(link.note) : '')+'</span>';
     }).join(' ');
     var tagsHtml = tagPill(PROTEIN_TYPES, proteinOf(idea)) + tagPill(EFFORT_LEVELS, effortOf(idea));
-
     body.innerHTML =
       ideaPhotoOrPlaceholderHtml(idea, 'idea-detail-img') +
       '<div class="idea-detail-name">'+escapeHtml(idea.name)+'</div>' +
@@ -2064,26 +1984,22 @@
       (sourceHtml ? '<div style="margin-top:8px;">'+sourceHtml+'</div>' : '') +
       '<button type="button" class="btn secondary edit-idea-inline-btn" data-edit="'+id+'" style="margin-top:10px;">✏️ Edit suggestion</button>' +
       ingredientPanelHtml(id, idea);
-
     body.querySelectorAll('[data-edit]').forEach(function(btn){
       btn.onclick = function(){ closeIdeaDetail(); editIdea(btn.getAttribute('data-edit')); };
     });
     wireIngredientPanelEvents(body, renderIdeaDetailBody);
   }
-
   // ---------- Render: Vote ("Can We Have?") ----------
   function renderVote(){
     var el = document.getElementById('voteList');
     if(isFocusWithin(document.getElementById('ideaMoreDetails')) || isFocusWithin(document.querySelector('#view-vote .add-item-form')) || isFocusWithin(el)) return;
     var allIds = Object.keys(state.ideas);
-
     document.querySelectorAll('#ideaFilterRow .filter-btn').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-filter') === ideaFilter);
     });
     document.querySelectorAll('#ideaViewModeRow .filter-btn').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-viewmode') === ideaViewMode);
     });
-
     if(allIds.length === 0){
       el.innerHTML = '<div class="card empty-hint">No suggestions yet — add one above!</div>';
       return;
@@ -2102,7 +2018,6 @@
       return;
     }
     ids.sort(function(a,b){ return ideaNameOf(a).localeCompare(ideaNameOf(b)); });
-
     var html;
     if(ideaViewMode === 'protein'){
       // Bucket the already-filtered, already-name-sorted ids into protein
@@ -2126,14 +2041,12 @@
       html = '<div class="idea-grid">'+ids.map(function(id){ return ideaCardHtml(id); }).join('')+'</div>';
     }
     el.innerHTML = html;
-
     el.querySelectorAll('[data-open-idea]').forEach(function(card){
       card.addEventListener('click', function(){
         openIdeaDetail(card.getAttribute('data-open-idea'));
       });
     });
   }
-
   // ---------- Spin randomiser ----------
   // A vertical "slot reel" rather than a pie wheel — plain horizontal text in
   // stacked rows reads far more cleanly than labels wrapped around a circle,
@@ -2146,7 +2059,6 @@
   var wheelState = null; // {queue:[dates], segments:[{id,name,protein}], usedIds:[], winner}
   var quickPlanQueue = null; // [dates] remaining to fill via the guided Quick Plan flow
   var quickPlanResumeQueue = null; // [dates] to hand back to Quick Plan once a one-off spin (from "spin instead") finishes
-
   function shuffleArr(arr){
     var a = arr.slice();
     for(var i=a.length-1;i>0;i--){
@@ -2190,7 +2102,6 @@
       });
     }
     wheelState.usedIds.forEach(function(id){ plannedIds[id] = true; });
-
     var tier1 = all.filter(function(i){
       var s = segs[i];
       if(plannedIds[s.id]) return false;
@@ -2209,7 +2120,6 @@
     quickPlanQueue = null;
     quickPlanResumeQueue = null;
   }
-
   // ---------- Quick Plan (guided flow) ----------
   // Reuses the same overlay/modal as the spinner, but shows top suggestions
   // as tap-to-pick cards instead of forcing a spin — walking through each
@@ -2223,7 +2133,6 @@
     renderQuickPlanStep();
     openWheelOverlay();
   }
-
   function renderQuickPlanStep(){
     if(!quickPlanQueue || !quickPlanQueue.length){
       closeWheelOverlay();
@@ -2235,7 +2144,6 @@
     // Planner) — a shuffled handful keeps this feeling fresh each time
     // rather than always showing the same alphabetically-first five.
     var ids = shuffleArr(Object.keys(state.ideas)).slice(0, 5);
-
     var picksHtml = ids.length
       ? ids.map(function(id){
           var idea = state.ideas[id];
@@ -2245,14 +2153,12 @@
           '</button>';
         }).join('')
       : '<div class="sub" style="margin:10px 0;">Add a few meal ideas in 🍽️ Mains first, then come back!</div>';
-
     document.getElementById('wheelBody').innerHTML =
       '<div class="wheel-for-date">🚀 What\'s for '+escapeHtml(dayLabel(dateStr))+'?</div>' +
       '<div class="sub">'+quickPlanQueue.length+' night'+(quickPlanQueue.length === 1 ? '' : 's')+' left to plan</div>' +
       '<div class="quick-plan-picks">'+picksHtml+'</div>' +
       (ids.length ? '<button type="button" class="btn secondary" id="quickPlanSpinBtn" style="margin-top:6px;">🎲 Not sure? Spin instead</button>' : '') +
       '<button type="button" class="btn secondary" id="quickPlanSkipBtn" style="margin-top:8px;">Skip this night</button>';
-
     document.querySelectorAll('[data-quickpick]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var ideaId = btn.getAttribute('data-quickpick');
@@ -2275,7 +2181,6 @@
       renderQuickPlanStep();
     });
   }
-
   function startWheel(dates){
     dates = dates.filter(Boolean);
     if(!dates.length) return;
@@ -2291,18 +2196,15 @@
     renderWheelBody();
     openWheelOverlay();
   }
-
   function reelItemHtml(s, i){
     var color = WHEEL_COLORS[i % WHEEL_COLORS.length];
     return '<div class="spin-reel-item" style="border-left-color:'+color+';">'+escapeHtml(s.name)+'</div>';
   }
-
   function renderWheelBody(){
     if(!wheelState) return;
     var dateStr = wheelState.queue[0];
     var segs = wheelState.segments;
     var idleItems = shuffleArr(segs).map(reelItemHtml).join('');
-
     document.getElementById('wheelBody').innerHTML =
       '<div class="wheel-for-date">🎲 What\'s for '+escapeHtml(dayLabel(dateStr))+'?</div>' +
       '<div class="sub">'+(wheelState.queue.length > 1 ? (wheelState.queue.length)+' nights left to fill' : 'Spin to decide!')+'</div>' +
@@ -2318,7 +2220,6 @@
         '<button type="button" class="btn" id="wheelUseBtn">Use this!</button> ' +
         '<button type="button" class="btn secondary" id="wheelAgainBtn">Spin again</button>' +
       '</div>';
-
     document.getElementById('spinWheelBtn').addEventListener('click', spinWheel);
     document.getElementById('wheelUseBtn').addEventListener('click', useWheelResult);
     document.getElementById('wheelAgainBtn').addEventListener('click', function(){
@@ -2327,15 +2228,12 @@
       document.getElementById('spinWheelBtn').style.display = '';
     });
   }
-
   function spinWheel(){
     if(!wheelState) return;
     var segs = wheelState.segments;
-
     var eligible = eligibleSegmentIndices(segs, wheelState.queue[0]);
     var winnerIdx = eligible[Math.floor(Math.random() * eligible.length)];
     wheelState.winner = segs[winnerIdx];
-
     // Build a long reel of shuffled laps with the winner as the very last
     // item, then scroll the track so that last item lands centred under the
     // highlight window — no rotation math, no carried-over state between
@@ -2345,13 +2243,11 @@
     reelList.push(wheelState.winner);
     var winnerPos = reelList.length - 1;
     var target = -(winnerPos*SPIN_ITEM_HEIGHT + SPIN_ITEM_HEIGHT/2 - SPIN_REEL_HEIGHT/2);
-
     var spinBtn = document.getElementById('spinWheelBtn');
     var track = document.getElementById('spinReelTrack');
     if(!spinBtn || !track) return;
     spinBtn.style.display = 'none';
     document.getElementById('wheelResult').textContent = '';
-
     track.innerHTML = reelList.map(reelItemHtml).join('');
     track.style.transition = 'none';
     track.style.transform = 'translateY(0px)';
@@ -2363,7 +2259,6 @@
     requestAnimationFrame(function(){
       track.style.transform = 'translateY('+target+'px)';
     });
-
     var revealed = false;
     function reveal(){
       if(revealed) return;
@@ -2379,7 +2274,6 @@
     });
     setTimeout(reveal, 3900); // fallback in case the browser skips transitionend
   }
-
   function useWheelResult(){
     if(!wheelState || !wheelState.winner) return;
     var dateStr = wheelState.queue.shift();
@@ -2402,7 +2296,6 @@
       closeWheelOverlay();
     }
   }
-
   document.getElementById('wheelCloseBtn').addEventListener('click', closeWheelOverlay);
   document.getElementById('wheelOverlay').addEventListener('click', function(e){
     if(e.target.id === 'wheelOverlay') closeWheelOverlay();
@@ -2423,7 +2316,6 @@
     if(!empty.length){ window.alert('Every night this week already has something planned!'); return; }
     startWheel(empty);
   });
-
   // ---------- Render: Planner ----------
   // Once a night has something assigned, its dropdown is locked behind an
   // explicit "🔓 Change" tap rather than sitting there freely editable —
@@ -2435,7 +2327,6 @@
     if(isFocusWithin(el)) { document.getElementById('shareLink').textContent = window.location.href.split('#')[0]; return; }
     var me = getMe();
     var ideaIds = Object.keys(state.ideas).sort(function(a,b){ return ideaNameOf(a).localeCompare(ideaNameOf(b)); });
-
     el.innerHTML = DATES.map(function(dateStr){
       var meal = state.meals[dateStr];
       var currentIdeaId = meal ? meal.ideaId : '';
@@ -2447,7 +2338,6 @@
       }).join('');
       var sourceHtml = meal ? '<div style="margin-top:8px;">'+categoryBadge(meal)+'<span class="meal-source">'+sourceLabel(meal.sourceType)+
         (meal.sourceNote ? ' — '+escapeHtml(meal.sourceNote) : '')+'</span></div>' : '';
-
       // Locked whenever something's assigned and hasn't been explicitly
       // unlocked for this render cycle — an empty night is always freely
       // editable since there's nothing settled yet to protect.
@@ -2463,7 +2353,6 @@
               ? '<button type="button" class="btn secondary planner-relock-btn" data-relock-date="'+dateStr+'" title="Keep the current plan">🔒 Cancel</button>'
               : '') +
           '</div>';
-
       // Voting happens here, on what's actually planned — not on the idea
       // pool — so it only shows up once a night has something assigned.
       var voteHtml = '';
@@ -2479,7 +2368,6 @@
           '<div class="vote-buttons">'+voteButtons+'</div>' +
           '<div class="vote-tally">😋 '+tally.yum+'  ·  😐 '+tally.meh+'  ·  🤢 '+tally.no+'</div>';
       }
-
       var safeFoodIds = Object.keys(state.safeFoods);
       var currentBackup = meal ? (meal.backupFood || '') : '';
       var backupOptions = '<option value="">— no backup —</option>' + safeFoodIds.map(function(id){
@@ -2490,7 +2378,6 @@
         ? '<div class="sub" style="margin:8px 0 2px;">🆘 Backup food, if it\'s rejected:</div>' +
           '<select class="assign-select backup-select" data-backup-date="'+dateStr+'">'+backupOptions+'</select>'
         : '';
-
       // A checkbox per side (repeated on every one of the 14 nights) stopped
       // scaling once the sides library grew — instead each night just shows
       // chips for whatever's already attached, with a button that opens a
@@ -2509,13 +2396,11 @@
             '<button type="button" class="btn secondary side-add-btn" data-open-side-picker="'+dateStr+'">+ Add side</button>' +
           '</div>'
         : '';
-
       // The spin trigger would otherwise be a back door around the lock —
       // no point locking the dropdown if a re-spin can still silently
       // overwrite a settled night, so it only shows up while unlocked.
       var wheelTriggerHtml = isLocked ? '' :
         '<button type="button" class="wheel-trigger" data-wheel-date="'+dateStr+'" title="Spin for this night">🎲</button>';
-
       return '<div class="day-card" id="daycard-'+dateStr+'" data-day-date="'+dateStr+'">' +
         '<div class="day-label">'+dayLabel(dateStr)+
           wheelTriggerHtml +
@@ -2527,7 +2412,6 @@
         sideHtml +
       '</div>';
     }).join('');
-
     el.querySelectorAll('[data-unlock-date]').forEach(function(btn){
       btn.addEventListener('click', function(){
         unlockedPlannerDates[btn.getAttribute('data-unlock-date')] = true;
@@ -2595,10 +2479,8 @@
         renderDashboard();
       });
     });
-
     document.getElementById('shareLink').textContent = window.location.href.split('#')[0];
   }
-
   // ---------- Render: Calendar (overview above Planner) ----------
   function renderCalendar(){
     var el = document.getElementById('calendarGrid');
@@ -2644,14 +2526,12 @@
       });
     });
   }
-
   // ---------- Render: Shopping ----------
   var CATEGORIES = ["Produce","Meat & Fish","Dairy & Eggs","Bakery","Pantry","Frozen","Household","Other"];
   function renderShopping(){
     var el = document.getElementById('shoppingLists');
     if(isFocusWithin(document.querySelector('#view-shopping .add-item-form'))) return;
     var items = state.shoppingList || {};
-
     var html = [1,2].map(function(week){
       var weekIds = Object.keys(items).filter(function(id){ return (items[id].week||1) === week; });
       var body;
@@ -2681,7 +2561,6 @@
         '</div>' + body;
     }).join('');
     el.innerHTML = html;
-
     el.querySelectorAll('.chk').forEach(function(cb){
       cb.addEventListener('change', function(){
         var id = cb.getAttribute('data-id');
@@ -2709,7 +2588,6 @@
       });
     });
   }
-
   // ---------- Render: Archive ----------
   function renderArchive(){
     var el = document.getElementById('archiveList');
@@ -2737,7 +2615,6 @@
         '</div>' +
       '</div>';
     }).join('');
-
     el.querySelectorAll('[data-expand]').forEach(function(head){
       head.addEventListener('click', function(e){
         if(e.target.closest('[data-del-archive]')) return;
@@ -2752,7 +2629,6 @@
       });
     });
   }
-
   // ---------- Render: Home ----------
   // The landing screen: tonight's plan, this week's progress, a shopping
   // snapshot and a couple of quick actions — one glanceable place to start,
@@ -2760,10 +2636,8 @@
   function renderHome(){
     var todayStr = DATES[0];
     var todayMeal = state.meals[todayStr];
-
     var greetEl = document.getElementById('homeGreeting');
     if (greetEl) greetEl.textContent = dayLabel(todayStr);
-
     var todayEl = document.getElementById('homeToday');
     if (todayEl) {
       if (todayMeal && todayMeal.ideaId) {
@@ -2781,7 +2655,6 @@
           '<button type="button" class="btn" data-view="planner" style="margin-top:6px;">Plan tonight</button>';
       }
     }
-
     var progEl = document.getElementById('homeWeekProgress');
     if (progEl) {
       var week1 = WEEK_DATES[1];
@@ -2791,7 +2664,6 @@
         '<div class="home-progress-row"><span>' + plannedCount + ' of ' + week1.length + ' nights planned</span><span>' + pct + '%</span></div>' +
         '<div class="home-progress-bar"><span style="width:' + pct + '%;"></span></div>';
     }
-
     var shopEl = document.getElementById('homeShoppingSnapshot');
     if (shopEl) {
       var items = Object.keys(state.shoppingList || {}).map(function(id){ return state.shoppingList[id]; });
@@ -2801,7 +2673,6 @@
         : '<div class="home-shopping-row"><span>🛒 Shopping list is all checked off ✅</span><button type="button" class="btn secondary" data-view="shopping">View list</button></div>';
     }
   }
-
   // ---------- Render: Dashboard ----------
   function renderDashboard(){
     var el = document.getElementById('dashboardList');
@@ -2833,7 +2704,6 @@
     }).join('');
     el.innerHTML = html || '<div class="empty-hint">Assign some meals in the Planner first.</div>';
   }
-
   // ---------- Render: Household ----------
   function renderHousehold(){
     var el = document.getElementById('memberChips');
@@ -2855,7 +2725,6 @@
       });
     });
   }
-
   // ---------- Render: Safe Foods ----------
   function renderSafeFoods(){
     var el = document.getElementById('safeFoodChips');
@@ -2879,7 +2748,6 @@
       });
     });
   }
-
   function renderAll(){
     renderWhoBar();
     renderHome();
@@ -2893,7 +2761,6 @@
     renderSafeFoods();
     renderSides();
   }
-
   // ---------- Tab nav ----------
   // Views tucked away under "More" so the bottom nav itself stays down to
   // five thumb-reachable buttons; the More button lights up while any of
@@ -2929,7 +2796,6 @@
   document.getElementById('moreSheetOverlay').addEventListener('click', function(e){
     if (e.target.id === 'moreSheetOverlay') closeMoreSheet();
   });
-
   // ---------- How it works ----------
   function openHowItWorks(){ document.getElementById('howItWorksOverlay').style.display = 'flex'; }
   function closeHowItWorks(){ document.getElementById('howItWorksOverlay').style.display = 'none'; }
@@ -2939,12 +2805,10 @@
   document.getElementById('howItWorksOverlay').addEventListener('click', function(e){
     if (e.target.id === 'howItWorksOverlay') closeHowItWorks();
   });
-
   document.getElementById('ideaDetailCloseBtn').addEventListener('click', closeIdeaDetail);
   document.getElementById('ideaDetailOverlay').addEventListener('click', function(e){
     if (e.target.id === 'ideaDetailOverlay') closeIdeaDetail();
   });
-
   document.getElementById('sidePickerCloseBtn').addEventListener('click', closeSidePicker);
   document.getElementById('sidePickerOverlay').addEventListener('click', function(e){
     if (e.target.id === 'sidePickerOverlay') closeSidePicker();
@@ -2953,7 +2817,6 @@
     sidePickerSearchText = e.target.value;
     renderSidePicker();
   });
-
   // ---------- Add idea / item / member ----------
   renderLinkRows([{type:'other', note:''}]); // seed the first link row on page load
   setIdeaDetailsOpen(false);
@@ -3003,7 +2866,6 @@
   document.getElementById('ideaImagePreviewClearBtn').addEventListener('click', function(){
     setImagePreview('ideaImage', 'ideaImagePreviewWrap', 'ideaImagePreviewImg', '');
   });
-
   // ---------- Add/edit side ----------
   renderLinkRowsInto('sideLinksRows', [{type:'other', note:''}]);
   document.getElementById('addSideLinkRowBtn').addEventListener('click', function(){ addLinkRowInto('sideLinksRows'); });
@@ -3084,7 +2946,38 @@
       setTimeout(function(){ b.textContent = old; }, 1500);
     });
   });
-
+  // ---------- Incoming shares from the iOS Share Extension ----------
+  // Native side stashes a shared link in a spot the SharedContent plugin can
+  // read; we register the JS-side plugin proxy ourselves since this is a
+  // purely-native custom plugin with no npm package of its own.
+  var SharedContentPlugin = (window.Capacitor && window.Capacitor.registerPlugin)
+    ? window.Capacitor.registerPlugin('SharedContent')
+    : null;
+  function checkForSharedContent(){
+    var plugin = SharedContentPlugin;
+    if(!plugin) return;
+    plugin.getSharedURL().then(function(result){
+      var url = result && result.url;
+      if(!url) return;
+      switchView('vote');
+      resetIdeaForm();
+      setIdeaDetailsOpen(true);
+      var row = document.querySelector('#ideaLinksRows .idea-link-row');
+      if(row){
+        var noteInput = row.querySelector('.ideaLinkNote');
+        noteInput.value = url;
+        tryFetchLinkPreview(row, 'ideaLinksRows');
+      }
+      plugin.clearSharedURL();
+    }).catch(function(){ /* nothing pending, or plugin unavailable — quietly ignore */ });
+  }
+  checkForSharedContent();
+  (function(){
+    var appPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+    if(appPlugin && appPlugin.addListener){
+      appPlugin.addListener('appUrlOpen', function(){ checkForSharedContent(); });
+    }
+  })();
   initSync();
 })();
 </script>

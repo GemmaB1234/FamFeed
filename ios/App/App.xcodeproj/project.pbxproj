@@ -10,6 +10,7 @@
 		20A95B6F3024E02E00838007 /* FamFeedShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 20A95B653024E02E00838007 /* FamFeedShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		20A95B7D3024EF6600838007 /* SharedContentPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 20A95B7B3024EF6600838007 /* SharedContentPlugin.m */; };
 		20A95B7E3024EF6600838007 /* SharedContentPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A95B7C3024EF6600838007 /* SharedContentPlugin.swift */; };
+		20A95B853025DDB000838007 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A95B843025DD8A00838007 /* MainViewController.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -50,6 +51,7 @@
 		20A95B793024EA6600838007 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		20A95B7B3024EF6600838007 /* SharedContentPlugin.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SharedContentPlugin.m; sourceTree = "<group>"; };
 		20A95B7C3024EF6600838007 /* SharedContentPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedContentPlugin.swift; sourceTree = "<group>"; };
+		20A95B843025DD8A00838007 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -119,6 +121,7 @@
 			isa = PBXGroup;
 			children = (
 				20A95B793024EA6600838007 /* App.entitlements */,
+				20A95B843025DD8A00838007 /* MainViewController.swift */,
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -262,6 +265,7 @@
 				20A95B7E3024EF6600838007 /* SharedContentPlugin.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				20A95B853025DDB000838007 /* MainViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
