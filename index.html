@@ -4,36 +4,54 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fam Feed — Meal Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --sunset:#FF6B4A;
-    --tangerine:#FF9F45;
-    --teal:#00C2A8;
-    --grape:#8E5CF7;
+    /* Brand palette — warm, friendly, slightly cheeky rather than corporate */
+    --purple:#7A3FF2;
+    --pink:#F66AC0;
+    --orange:#FFB547;
+    --mint:#C8F2D0;
+    --lavender:#F4EDFF;
+    --cream:#FFF9F5;
+    /* Kept as aliases so the rest of the stylesheet (which already leans on
+       these names everywhere) picks up the new brand colours for free. */
+    --sunset:#FF9147;
+    --tangerine:#FFB547;
+    --teal:#2BBE8E;
+    --grape:#7A3FF2;
     --lemon:#FFD166;
     --ink:#2B2140;
-    --bg1:#FFF4E8;
-    --bg2:#FFEAF2;
+    --bg1:#FFF9F5;
+    --bg2:#F4EDFF;
     --card:#FFFFFF;
     --muted:#8B8397;
-    --yum:#00C2A8;
-    --meh:#FFB84D;
-    --no:#FF5C7A;
-    --radius:18px;
-    --shadow: 0 8px 24px rgba(43,33,64,0.08);
+    --yum:#2BBE8E;
+    --meh:#FFB547;
+    --no:#F66AC0;
+    --radius:20px;
+    --shadow: 0 8px 24px rgba(122,63,242,0.08);
+    /* Soft tinted card backgrounds, per feature area, instead of flat white */
+    --tint-planning:#F4EDFF;
+    --tint-shopping:#E6F9EE;
+    --tint-voting:#FFF1E9;
+    --tint-sides:#FFF9F5;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
-    font-family:'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    font-family:'Nunito', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
     background:
-      radial-gradient(circle at 10% 10%, var(--bg2) 0%, transparent 40%),
-      radial-gradient(circle at 90% 0%, #E9F9F5 0%, transparent 45%),
-      linear-gradient(180deg, var(--bg1), #FFF9F0 60%, var(--bg1));
+      radial-gradient(circle at 10% 10%, var(--lavender) 0%, transparent 40%),
+      radial-gradient(circle at 90% 0%, #FDEAF6 0%, transparent 45%),
+      linear-gradient(180deg, var(--cream), #FFFDFB 60%, var(--cream));
     color:var(--ink);
     min-height:100vh;
     padding-bottom:96px;
   }
+  h1, h2, h3, .card h2{ font-family:'Fredoka', 'Nunito', system-ui, sans-serif; font-weight:600; }
   button, input, select, textarea{ font-family:inherit; }
   button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
     outline:2px solid var(--grape); outline-offset:2px;
@@ -90,8 +108,8 @@
     padding:7px 2px 6px; cursor:pointer; border-radius:14px; min-height:52px;
     transition:color .15s ease, background .15s ease;
   }
-  .bottom-nav button .bn-icon{ font-size:1.35rem; line-height:1; }
-  .bottom-nav button.active{ color:var(--grape); background:#F5F0FC; }
+  .bottom-nav button .bn-icon{ width:22px; height:22px; margin:0 auto; }
+  .bottom-nav button.active{ color:var(--purple); background:var(--lavender); }
   /* More sheet — the rest of the tabs, one tap away */
   .more-sheet-overlay{
     position:fixed; inset:0; background:rgba(30,15,45,0.5); display:flex;
@@ -125,15 +143,31 @@
   .home-progress-bar span{ display:block; height:100%; background:linear-gradient(90deg, var(--teal), var(--grape)); border-radius:999px; transition:width .5s ease; }
   .home-quick-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
   .home-shopping-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:700; flex-wrap:wrap; }
+  .home-cta-card{ background:linear-gradient(135deg, var(--purple), var(--pink)); color:#fff; text-align:center; }
+  .home-cta-card h2{ color:#fff; justify-content:center; font-size:1.3rem; }
+  .home-cta-card .sub{ color:rgba(255,255,255,0.88); }
+  .home-cta-card .btn{ background:#fff; color:var(--purple); font-weight:800; }
   .home-shortcuts{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
   .home-shortcut{
-    display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 10px;
-    border:none; border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow);
-    font-weight:700; font-size:0.85rem; color:var(--ink); cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:8px; padding:20px 10px;
+    border:none; border-radius:var(--radius); box-shadow:var(--shadow);
+    font-weight:800; font-size:0.85rem; color:var(--ink); cursor:pointer;
     transition:transform .15s ease;
   }
   .home-shortcut:hover{ transform:translateY(-2px); }
-  .home-shortcut-icon{ font-size:1.6rem; }
+  .home-shortcut .ff-icon{ width:30px; height:30px; }
+  .home-shortcut.tile-purple{ background:var(--lavender); color:var(--purple); }
+  .home-shortcut.tile-blue{ background:#E8F0FF; color:#3E6FE0; }
+  .home-shortcut.tile-mint{ background:var(--mint); color:#1E8F60; }
+  .home-shortcut.tile-yellow{ background:#FFF3D6; color:#B9781A; }
+  .home-vote-row{
+    display:flex; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px solid rgba(43,33,64,0.06);
+  }
+  .home-vote-row:last-child{ border-bottom:none; }
+  .home-vote-rank{ font-weight:800; color:var(--orange); font-size:0.95rem; width:1.4em; flex-shrink:0; }
+  .home-vote-name{ flex:1; font-weight:700; font-size:0.92rem; }
+  .home-vote-stars{ display:flex; gap:2px; color:var(--orange); flex-shrink:0; }
+  .home-vote-stars .ff-icon{ width:15px; height:15px; }
   /* Quick Plan (reuses the spin modal shell) */
   .quick-plan-picks{ display:flex; flex-direction:column; gap:8px; margin:14px 0; max-height:280px; overflow-y:auto; }
   .quick-plan-pick{
@@ -155,11 +189,24 @@
     background:var(--card);
     border-radius:var(--radius);
     box-shadow:var(--shadow);
-    padding:18px 20px;
+    padding:20px 22px;
     margin-bottom:16px;
+    border:none;
   }
-  .card h2{ margin:0 0 4px; font-size:1.15rem; }
+  .card h2{ margin:0 0 4px; font-size:1.15rem; display:flex; align-items:center; gap:8px; }
   .card .sub{ color:var(--muted); font-size:0.85rem; margin-bottom:14px; }
+  /* Soft tinted card backgrounds, colour-coded per feature area, per brand brief */
+  .card.tint-planning{ background:var(--tint-planning); }
+  .card.tint-shopping{ background:var(--tint-shopping); }
+  .card.tint-voting{ background:var(--tint-voting); }
+  .card.tint-sides{ background:var(--tint-sides); }
+  /* Small rounded flat icon used inline before headings / labels / empty states */
+  .ff-icon{ display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .ff-icon svg{ display:block; }
+  .empty-illo{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:22px 12px; }
+  .empty-illo .ff-icon{ width:56px; height:56px; }
+  .empty-illo h3{ margin:0; font-size:1.02rem; }
+  .empty-illo p{ margin:0; color:var(--muted); font-size:0.88rem; max-width:280px; }
   /* Who are you picker */
   #whoBar{
     display:flex;
@@ -563,8 +610,8 @@
 <body>
 <header class="top">
   <button type="button" id="howItWorksBtn" class="how-it-works-btn" title="How this works">ℹ️</button>
-  <h1>🍽️ Fam Feed</h1>
-  <p>Two weeks of dinners. Zero arguments (well — fewer).</p>
+  <h1><span id="brandMark" class="ff-icon" style="width:26px;height:26px;vertical-align:-6px;margin-right:6px;"></span>Fam Feed</h1>
+  <p>Your family's dinner assistant — sorted, without the group chat chaos.</p>
 </header>
 <div id="demoBanner" class="demo-banner" style="display:none;">
   Running locally without a live backend — deploy to Vercel (see SETUP.md) so votes actually sync across everyone's phones.
@@ -575,9 +622,9 @@
     <button type="button" class="more-sheet-close" id="howItWorksCloseBtn" title="Close">✕</button>
     <div class="more-sheet-title">🍽️ How Fam Feed works</div>
     <ul class="how-it-works-list">
-      <li><strong>🍽️ Mains</strong> — anyone adds meal ideas here, sides live in their own library. No pressure, no voting yet — it's just the pool to pick from.</li>
+      <li><strong>🍽️ Favourites</strong> — anyone adds meal ideas here, sides live in their own library. No pressure, no voting yet — it's just the pool to pick from.</li>
       <li><strong>📅 Planner</strong> — assign ideas to nights. Once a night has a meal on it, everyone can react with 😋 😐 🤢 — voting is on what's actually happening, not hypotheticals.</li>
-      <li><strong>🚀 / 🎲 Can't decide?</strong> — Quick Plan walks you through empty nights one at a time, or hit Spin and let it choose for you.</li>
+      <li><strong>🚀 / 🎲 Can't decide?</strong> — Plan Next Week walks you through empty nights one at a time, or hit Pick for us and let it choose for you.</li>
       <li><strong>🛒 Shopping List</strong> — builds itself from what you plan, merging duplicate ingredients automatically.</li>
     </ul>
     <button type="button" class="btn" id="howItWorksGotItBtn" style="margin-top:6px;">Got it!</button>
@@ -609,37 +656,44 @@
       <div class="home-greeting" id="homeGreeting"></div>
       <div id="homeToday"></div>
     </div>
-    <div class="card">
-      <h2>This week</h2>
+    <div class="card tint-planning" id="homeSummaryCard">
+      <h2 id="homeSummaryTitle"></h2>
       <div class="sub">How much of the week's sorted so far.</div>
       <div id="homeWeekProgress"></div>
-      <div class="home-quick-actions">
-        <button type="button" class="btn" id="homeQuickPlanBtn">🚀 Quick Plan the week</button>
-        <button type="button" class="btn secondary" id="homeSpinBtn">🎲 Surprise me</button>
-      </div>
     </div>
-    <div class="card">
+    <div class="card home-cta-card" id="homeHeroCard">
+      <h2></h2>
+      <div class="sub" id="homeHeroSub">Fill two weeks in under 30 seconds.</div>
+      <button type="button" class="btn" id="homeQuickPlanBtn" style="width:100%;"></button>
+      <button type="button" class="btn secondary" id="homeSpinBtn" style="width:100%; margin-top:8px; background:rgba(255,255,255,0.18); color:#fff; box-shadow:none;"></button>
+    </div>
+    <div class="card tint-shopping">
       <div id="homeShoppingSnapshot"></div>
     </div>
-    <div class="home-shortcuts">
-      <button type="button" class="home-shortcut" data-view="vote"><span class="home-shortcut-icon">➕</span><span>Add a meal idea</span></button>
-      <button type="button" class="home-shortcut" data-view="planner"><span class="home-shortcut-icon">📅</span><span>Open Planner</span></button>
-      <button type="button" class="home-shortcut" data-view="shopping"><span class="home-shortcut-icon">🛒</span><span>Shopping List</span></button>
-      <button type="button" class="home-shortcut" data-view="sides"><span class="home-shortcut-icon">🍚</span><span>Sides Library</span></button>
+    <div class="home-shortcuts" id="homeQuickActions">
+      <button type="button" class="home-shortcut tile-purple" data-view="vote"></button>
+      <button type="button" class="home-shortcut tile-blue" data-view="planner"></button>
+      <button type="button" class="home-shortcut tile-mint" data-view="shopping"></button>
+      <button type="button" class="home-shortcut tile-yellow" data-view="sides"></button>
+    </div>
+    <div class="card tint-voting" id="homeVoteHighlightCard" style="display:none;">
+      <h2></h2>
+      <div class="sub">The meals everyone's most excited about right now.</div>
+      <div id="homeVoteHighlights"></div>
     </div>
   </section>
   <!-- VOTE VIEW (a.k.a. "Mains" — the "Can We Have?" idea pool) -->
   <section id="view-vote" class="view">
     <div class="card">
-      <h2>🍽️ Mains</h2>
-      <div class="sub">Suggest anything you fancy — "can we have this?" — everyone votes below, and the favourites get slotted into the Planner.</div>
+      <h2>🍽️ Favourites</h2>
+      <div class="sub">Your family's saved meals — add anything you fancy, and slot the best ones into the Planner.</div>
       <div class="add-item-form">
         <input type="text" id="ideaName" placeholder="e.g. Tray-bake fajitas — or paste a link below and we'll fill this in">
         <select id="ideaCategory">
           <option value="new">🎉 Something new</option>
           <option value="safe">😌 Old faithful (safe bet)</option>
         </select>
-        <button class="btn" id="addIdeaBtn">Add it</button>
+        <button class="btn" id="addIdeaBtn">Save a favourite</button>
         <button type="button" class="btn secondary" id="cancelEditBtn" style="display:none;">Cancel edit</button>
       </div>
       <div class="sub" id="proteinGuessHint" style="display:none; margin:-6px 0 8px;"></div>
@@ -708,8 +762,8 @@
   </section>
   <!-- SIDES VIEW -->
   <section id="view-sides" class="view">
-    <div class="card">
-      <h2>🍚 Sides library</h2>
+    <div class="card tint-sides">
+      <h2>🥗 Sides library</h2>
       <div class="sub">Go-to sides that pair with lots of different mains — egg fried rice, garlic bread, whatever. Add each one once with its link, then attach it to as many nights as you like from the Planner.</div>
       <div class="add-item-form" id="sideForm">
         <input type="text" id="sideName" placeholder="e.g. Egg fried rice — or paste a link below and we'll fill this in">
@@ -735,12 +789,12 @@
       <div class="sub">Tap a day to jump to it below.</div>
       <div class="calendar-grid" id="calendarGrid"></div>
     </div>
-    <div class="card">
+    <div class="card tint-planning">
       <h2>Plan this fortnight's dinners</h2>
-      <div class="sub">Pick from the suggestions in 🍽️ Mains for each night — best-voted ones are listed first. No inspiration? Hit 🎲 and let the spinner decide.</div>
+      <div class="sub">Pick from your saved favourites for each night — best-voted ones are listed first. No inspiration? Hit 🎲 Pick for us and let it decide.</div>
       <div class="wheel-week-btns">
-        <button type="button" class="btn secondary" id="wheelWeek1Btn">🎲 Surprise me — this week's empty nights</button>
-        <button type="button" class="btn secondary" id="wheelWeek2Btn">🎲 Surprise me — next week's empty nights</button>
+        <button type="button" class="btn secondary" id="wheelWeek1Btn">🎲 Pick for us — this week's empty nights</button>
+        <button type="button" class="btn secondary" id="wheelWeek2Btn">🎲 Pick for us — next week's empty nights</button>
       </div>
       <div class="day-grid" id="plannerGrid"></div>
     </div>
@@ -755,8 +809,8 @@
   </section>
   <!-- SHOPPING VIEW -->
   <section id="view-shopping" class="view">
-    <div class="card">
-      <h2>Shopping list</h2>
+    <div class="card tint-shopping">
+      <h2>🛒 This week's shop</h2>
       <div class="sub">Split by week to match the Planner. Tick things off as they go in the trolley, then archive a week once you're done shopping.</div>
       <div class="add-item-form">
         <input type="text" id="itemName" placeholder="e.g. chicken thighs">
@@ -790,8 +844,8 @@
   </section>
   <!-- DASHBOARD VIEW -->
   <section id="view-dashboard" class="view">
-    <div class="card">
-      <h2>How the fortnight's landing</h2>
+    <div class="card tint-voting">
+      <h2>🔥 Family votes</h2>
       <div class="sub">Live results as votes come in. Anything flagged is heading for a mutiny.</div>
       <div id="dashboardList"></div>
     </div>
@@ -820,11 +874,11 @@
 </main>
 <!-- BOTTOM NAV — thumb-reachable core tabs, with less-used views tucked under More -->
 <nav class="bottom-nav">
-  <button data-view="home" class="active"><span class="bn-icon">🏠</span><span class="bn-label">Home</span></button>
-  <button data-view="vote"><span class="bn-icon">🍽️</span><span class="bn-label">Mains</span></button>
-  <button data-view="planner"><span class="bn-icon">📅</span><span class="bn-label">Planner</span></button>
-  <button data-view="shopping"><span class="bn-icon">🛒</span><span class="bn-label">Shopping</span></button>
-  <button type="button" id="moreNavBtn"><span class="bn-icon">⋯</span><span class="bn-label">More</span></button>
+  <button data-view="home" class="active"><span class="bn-icon"></span><span class="bn-label">Home</span></button>
+  <button data-view="planner"><span class="bn-icon"></span><span class="bn-label">Planner</span></button>
+  <button data-view="shopping"><span class="bn-icon"></span><span class="bn-label">Shop</span></button>
+  <button data-view="vote"><span class="bn-icon"></span><span class="bn-label">Favourites</span></button>
+  <button type="button" id="moreNavBtn"><span class="bn-icon"></span><span class="bn-label">More</span></button>
 </nav>
 <!-- MORE SHEET — Sides / Archive / Votes / Household live here to keep the
      bottom nav itself down to a thumb-friendly five buttons -->
@@ -832,10 +886,10 @@
   <div class="more-sheet">
     <button type="button" class="more-sheet-close" id="moreSheetCloseBtn" title="Close">✕</button>
     <div class="more-sheet-title">More</div>
-    <button type="button" class="more-sheet-item" data-view="sides">🍚 Sides</button>
-    <button type="button" class="more-sheet-item" data-view="archive">🗄️ Archive</button>
-    <button type="button" class="more-sheet-item" data-view="dashboard">📊 Votes</button>
-    <button type="button" class="more-sheet-item" data-view="household">👪 Household</button>
+    <button type="button" class="more-sheet-item" data-view="sides"></button>
+    <button type="button" class="more-sheet-item" data-view="archive"></button>
+    <button type="button" class="more-sheet-item" data-view="dashboard"></button>
+    <button type="button" class="more-sheet-item" data-view="household"></button>
   </div>
 </div>
 <!-- WHEEL RANDOMISER MODAL -->
@@ -880,6 +934,44 @@
   // alphabetically wherever a list of ideas needs a stable order.
   function ideaNameOf(id){ return (state.ideas[id] && state.ideas[id].name) || ''; }
   function uid(){ return Math.random().toString(36).slice(2,10); }
+  // ---------- Small flat SVG icon set (replaces emoji app-wide) ----------
+  // One rounded, single-colour family — used via ffIcon('name', {size, color}).
+  var ICONS = {
+    home: '<svg viewBox="0 0 24 24"><path d="M12 3.2 20.5 10.4a1 1 0 0 1 .5.9V20a1 1 0 0 1-1 1h-4.2a1 1 0 0 1-1-1v-5.4H9.2V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8.7a1 1 0 0 1 .5-.9L12 3.2z" fill="currentColor"/></svg>',
+    planner: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="4" fill="currentColor"/><rect x="3" y="5" width="18" height="5.5" rx="4" fill="currentColor" opacity="0.5"/><circle cx="8" cy="3.4" r="1.3" fill="currentColor"/><circle cx="16" cy="3.4" r="1.3" fill="currentColor"/><rect x="6.5" y="13" width="4" height="4" rx="1.2" fill="#fff" opacity="0.85"/></svg>',
+    shop: '<svg viewBox="0 0 24 24"><path d="M7 9.5V7a5 5 0 0 1 10 0v2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><rect x="4" y="9.5" width="16" height="11" rx="4" fill="currentColor"/><circle cx="9.3" cy="15" r="1.1" fill="#fff"/><circle cx="14.7" cy="15" r="1.1" fill="#fff"/></svg>',
+    heart: '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.35-9.5-8.8C.8 7.7 2.6 4 6.3 4c2 0 3.4 1.1 4.2 2.3C11.3 5.1 12.7 4 14.7 4 18.4 4 20.2 7.7 18.5 11.2 16 15.65 12 20 12 20z" fill="currentColor"/></svg>',
+    more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.1" fill="currentColor"/><circle cx="12" cy="12" r="2.1" fill="currentColor"/><circle cx="19" cy="12" r="2.1" fill="currentColor"/></svg>',
+    pot: '<svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="9" rx="4" fill="currentColor"/><rect x="1.6" y="13" width="3.2" height="3" rx="1.5" fill="currentColor"/><rect x="19.2" y="13" width="3.2" height="3" rx="1.5" fill="currentColor"/><rect x="6" y="8" width="12" height="3" rx="1.5" fill="currentColor" opacity="0.55"/><circle cx="12" cy="6.3" r="1.4" fill="currentColor" opacity="0.55"/><circle cx="9" cy="15.5" r="1" fill="#fff"/><circle cx="15" cy="15.5" r="1" fill="#fff"/><path d="M9 18c1 1.1 4 1.1 6 0" stroke="#fff" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>',
+    pasta: '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M3 12h18l-1.4 6.2A3 3 0 0 1 16.7 20H7.3a3 3 0 0 1-2.9-1.8L3 12z" fill="currentColor"/><path d="M8 9.3c.8-1 .8-1.9 0-2.9M12 9.3c.8-1 .8-1.9 0-2.9M16 9.3c.8-1 .8-1.9 0-2.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></svg>',
+    taco: '<svg viewBox="0 0 24 24"><path d="M2 13a10 10 0 0 1 20 0c0 .6-.4 1-1 1a1 1 0 0 1-.9-.6C18.6 10.4 15.6 8 12 8s-6.6 2.4-8.1 5.4a1 1 0 0 1-.9.6c-.6 0-1-.4-1-1z" fill="currentColor"/><circle cx="8" cy="12.4" r="1" fill="#fff"/><circle cx="12" cy="11.3" r="1" fill="#fff"/><circle cx="16" cy="12.4" r="1" fill="#fff"/></svg>',
+    pizza: '<svg viewBox="0 0 24 24"><path d="M12 3 3 20h18L12 3z" fill="currentColor"/><circle cx="12" cy="10.2" r="1.1" fill="#fff"/><circle cx="9.8" cy="14.3" r="1.1" fill="#fff"/><circle cx="14.2" cy="14.3" r="1.1" fill="#fff"/></svg>',
+    salad: '<svg viewBox="0 0 24 24"><path d="M3 12h18l-1.5 5.4A3 3 0 0 1 16.6 19.6H7.4a3 3 0 0 1-2.9-2.2L3 12z" fill="currentColor"/><path d="M12 11c-2-3 0-6 3-6-1 3-1 5-3 6z" fill="currentColor" opacity="0.55"/></svg>',
+    broccoli: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4" fill="currentColor"/><circle cx="14.2" cy="6.8" r="3.3" fill="currentColor"/><circle cx="12" cy="10.5" r="3.1" fill="currentColor"/><rect x="10.5" y="12" width="3" height="9" rx="1.5" fill="currentColor" opacity="0.55"/></svg>',
+    plus: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 7.3v9.4M7.3 12h9.4" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    dice: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="currentColor"/><circle cx="8" cy="8" r="1.4" fill="#fff"/><circle cx="16" cy="8" r="1.4" fill="#fff"/><circle cx="12" cy="12" r="1.4" fill="#fff"/><circle cx="8" cy="16" r="1.4" fill="#fff"/><circle cx="16" cy="16" r="1.4" fill="#fff"/></svg>',
+    star: '<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.1 6.5L12 17.6 6.2 20.5l1.1-6.5L2.5 9.4l6.6-.9L12 2.5z" fill="currentColor"/></svg>',
+    fire: '<svg viewBox="0 0 24 24"><path d="M12 2c1 3-3 4-3 8a3 3 0 0 0 6 0c1 1 2 2.5 2 4.5A5.5 5.5 0 0 1 6 14c0-5 4-6 6-12z" fill="currentColor"/></svg>',
+    archive: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="2" fill="currentColor"/><rect x="4" y="10" width="16" height="10" rx="2" fill="currentColor" opacity="0.55"/><rect x="9" y="13" width="6" height="2" rx="1" fill="#fff"/></svg>',
+    household: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2" fill="currentColor"/><circle cx="17" cy="9" r="2.6" fill="currentColor" opacity="0.6"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" fill="currentColor"/><path d="M15 20c0-2.2-.8-4.1-2.1-5.4 1-.6 2.2-1 3.5-1 2.9 0 5.6 2.4 5.6 6.4" fill="currentColor" opacity="0.6"/></svg>',
+    check: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7.5 12.5l3 3 6-6.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
+    sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.3" fill="currentColor"/><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></g></svg>',
+    basket: '<svg viewBox="0 0 24 24"><path d="M7 9.5V7a5 5 0 0 1 10 0v2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><rect x="4" y="9.5" width="16" height="11" rx="4" fill="currentColor"/><circle cx="9.3" cy="15" r="1.1" fill="#fff"/><circle cx="14.7" cy="15" r="1.1" fill="#fff"/></svg>',
+    bubble: '<svg viewBox="0 0 24 24"><path d="M4 5h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 4v-4H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" fill="currentColor"/></svg>'
+  };
+  function ffIcon(name, opts){
+    opts = opts || {};
+    var size = opts.size || 22;
+    var color = opts.color || 'currentColor';
+    var svg = ICONS[name] || ICONS.pot;
+    return '<span class="ff-icon" style="width:' + size + 'px;height:' + size + 'px;color:' + color + ';">' + svg + '</span>';
+  }
+  // Playful illustrated empty state — icon + short, human copy instead of a
+  // bare "nothing here" line. `color` lets each feature area use its own
+  // accent (purple for planning, mint for shopping, etc).
+  function emptyState(icon, text, color){
+    return '<div class="empty-illo">' + ffIcon(icon, {size:48, color: color || 'var(--purple)'}) + '<p>' + text + '</p></div>';
+  }
   // 14 upcoming dates starting today
   var DATES = [];
   (function(){
@@ -1318,7 +1410,7 @@
     document.getElementById('ideaEffort').value = 'medium';
     renderLinkRows([{type:'other', note:''}]);
     setImagePreview('ideaImage', 'ideaImagePreviewWrap', 'ideaImagePreviewImg', '');
-    document.getElementById('addIdeaBtn').textContent = 'Add it';
+    document.getElementById('addIdeaBtn').textContent = 'Save a favourite';
     document.getElementById('cancelEditBtn').style.display = 'none';
     document.getElementById('deleteIdeaWrap').style.display = 'none';
     setIdeaDetailsOpen(false);
@@ -1370,7 +1462,7 @@
     if(isFocusWithin(document.getElementById('sideForm'))) return;
     var allIds = Object.keys(state.sides || {});
     if(allIds.length === 0){
-      el.innerHTML = '<div class="sub" style="margin-top:8px;">No sides added yet — things like egg fried rice or garlic bread that go with lots of different mains.</div>';
+      el.innerHTML = emptyState('salad', 'No sides saved yet — things like egg fried rice or garlic bread that go with lots of different mains.', 'var(--orange)');
       return;
     }
     var searchLower = sideSearchText.trim().toLowerCase();
@@ -1379,7 +1471,7 @@
     });
     ids.sort(function(a,b){ return (state.sides[a].name||'').localeCompare(state.sides[b].name||''); });
     if(ids.length === 0){
-      el.innerHTML = '<div class="sub" style="margin-top:8px;">No sides match that search.</div>';
+      el.innerHTML = emptyState('salad', 'No sides match that search — try a different word.', 'var(--orange)');
       return;
     }
     el.innerHTML = ids.map(function(id){
@@ -2001,7 +2093,7 @@
       b.classList.toggle('active', b.getAttribute('data-viewmode') === ideaViewMode);
     });
     if(allIds.length === 0){
-      el.innerHTML = '<div class="card empty-hint">No suggestions yet — add one above!</div>';
+      el.innerHTML = '<div class="card">' + emptyState('pasta', 'No favourites yet! Add your first meal above to get started.') + '</div>';
       return;
     }
     var searchLower = ideaSearchText.trim().toLowerCase();
@@ -2014,7 +2106,7 @@
       return true;
     });
     if(ids.length === 0){
-      el.innerHTML = '<div class="card empty-hint">Nothing matches these filters.</div>';
+      el.innerHTML = '<div class="card">' + emptyState('taco', 'Nothing matches those filters — try widening the search.') + '</div>';
       return;
     }
     ids.sort(function(a,b){ return ideaNameOf(a).localeCompare(ideaNameOf(b)); });
@@ -2152,7 +2244,7 @@
             categoryBadge(idea) +
           '</button>';
         }).join('')
-      : '<div class="sub" style="margin:10px 0;">Add a few meal ideas in 🍽️ Mains first, then come back!</div>';
+      : '<div class="sub" style="margin:10px 0;">Add a few favourites in 🍽️ Favourites first, then come back!</div>';
     document.getElementById('wheelBody').innerHTML =
       '<div class="wheel-for-date">🚀 What\'s for '+escapeHtml(dayLabel(dateStr))+'?</div>' +
       '<div class="sub">'+quickPlanQueue.length+' night'+(quickPlanQueue.length === 1 ? '' : 's')+' left to plan</div>' +
@@ -2187,7 +2279,7 @@
     var pool = ideaPoolForWheel();
     if(pool.length === 0){
       document.getElementById('wheelBody').innerHTML =
-        '<div class="sub" style="margin:10px 0;">Add a few meal ideas in 🍽️ Mains first, then come back and spin!</div>';
+        '<div class="sub" style="margin:10px 0;">Add a few favourites in 🍽️ Favourites first, then come back and spin!</div>';
       openWheelOverlay();
       return;
     }
@@ -2536,7 +2628,7 @@
       var weekIds = Object.keys(items).filter(function(id){ return (items[id].week||1) === week; });
       var body;
       if(weekIds.length === 0){
-        body = '<div class="empty-hint">Nothing on the list for this week yet.</div>';
+        body = emptyState('basket', 'Nothing here yet — add your first item, or let the Planner fill it in for you.', 'var(--teal)');
       } else {
         body = '';
         CATEGORIES.forEach(function(cat){
@@ -2596,7 +2688,7 @@
       return new Date(state.archivedLists[b].archivedAt) - new Date(state.archivedLists[a].archivedAt);
     });
     if(ids.length === 0){
-      el.innerHTML = '<div class="empty-hint">No archived lists yet — archive a finished week from the Shopping List tab.</div>';
+      el.innerHTML = emptyState('archive', 'No archived lists yet — archive a finished week from This Week\'s Shop.', 'var(--muted)');
       return;
     }
     el.innerHTML = ids.map(function(id){
@@ -2633,11 +2725,72 @@
   // The landing screen: tonight's plan, this week's progress, a shopping
   // snapshot and a couple of quick actions — one glanceable place to start,
   // instead of landing on a list of recipes.
+  // One-time setup of the bits of the app chrome that never change per
+  // render (brand mark, nav icons, More-sheet rows, quick-action tiles) —
+  // all built from ffIcon() instead of emoji, per the brand refresh.
+  var STATIC_CHROME_DONE = false;
+  function initStaticChrome(){
+    if (STATIC_CHROME_DONE) return;
+    STATIC_CHROME_DONE = true;
+    var brand = document.getElementById('brandMark');
+    if (brand) brand.innerHTML = ICONS.pot;
+    var navIcons = { home:'home', planner:'planner', shopping:'shop', vote:'heart' };
+    document.querySelectorAll('.bottom-nav > [data-view]').forEach(function(b){
+      var icon = b.querySelector('.bn-icon');
+      if (icon) icon.innerHTML = ICONS[navIcons[b.getAttribute('data-view')]] || '';
+    });
+    var moreIcon = document.querySelector('#moreNavBtn .bn-icon');
+    if (moreIcon) moreIcon.innerHTML = ICONS.more;
+    var moreLabels = {
+      sides: ['salad', 'Sides'],
+      archive: ['archive', 'Archive'],
+      dashboard: ['fire', 'Votes'],
+      household: ['household', 'Household']
+    };
+    document.querySelectorAll('.more-sheet-item[data-view]').forEach(function(b){
+      var cfg = moreLabels[b.getAttribute('data-view')];
+      if (!cfg) return;
+      b.innerHTML = ffIcon(cfg[0], {size:20}) + '<span>' + cfg[1] + '</span>';
+    });
+    var quickActions = [
+      { view:'vote', icon:'pasta', label:'Save a favourite', cls:'tile-purple' },
+      { view:'planner', icon:'planner', label:'Plan dinners', cls:'tile-blue' },
+      { view:'shopping', icon:'shop', label:"This week's shop", cls:'tile-mint' },
+      { view:'sides', icon:'salad', label:'Browse sides', cls:'tile-yellow' }
+    ];
+    var qaWrap = document.getElementById('homeQuickActions');
+    if (qaWrap) {
+      qaWrap.querySelectorAll('.home-shortcut').forEach(function(btn, i){
+        var cfg = quickActions[i];
+        if (!cfg) return;
+        btn.innerHTML = ffIcon(cfg.icon, {size:30}) + '<span>' + cfg.label + '</span>';
+      });
+    }
+    var heroCard = document.getElementById('homeHeroCard');
+    if (heroCard) {
+      var heroH2 = heroCard.querySelector('h2');
+      if (heroH2) heroH2.innerHTML = ffIcon('dice', {size:20, color:'#fff'}) + '<span>Plan Next Week</span>';
+      var heroBtn = document.getElementById('homeQuickPlanBtn');
+      if (heroBtn) heroBtn.textContent = 'Start Planning';
+      var spinBtn = document.getElementById('homeSpinBtn');
+      if (spinBtn) spinBtn.innerHTML = ffIcon('dice', {size:16, color:'#fff'}) + '<span style="margin-left:6px;">Pick for us</span>';
+    }
+    var summaryH2 = document.querySelector('#homeSummaryCard h2');
+    if (summaryH2) summaryH2.innerHTML = ffIcon('pot', {size:20, color:'var(--purple)'}) + '<span>This week</span>';
+    var voteH2 = document.querySelector('#homeVoteHighlightCard h2');
+    if (voteH2) voteH2.innerHTML = ffIcon('fire', {size:20, color:'var(--orange)'}) + '<span>Family favourites</span>';
+  }
   function renderHome(){
+    initStaticChrome();
     var todayStr = DATES[0];
     var todayMeal = state.meals[todayStr];
+    var hour = new Date().getHours();
+    var timeGreeting = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
     var greetEl = document.getElementById('homeGreeting');
-    if (greetEl) greetEl.textContent = dayLabel(todayStr);
+    if (greetEl) {
+      greetEl.innerHTML = ffIcon('sun', {size:16, color:'var(--orange)'}) +
+        '<span style="margin-left:6px;">' + timeGreeting + '</span>';
+    }
     var todayEl = document.getElementById('homeToday');
     if (todayEl) {
       if (todayMeal && todayMeal.ideaId) {
@@ -2645,32 +2798,77 @@
           return '<span class="side-badge">🍚 ' + escapeHtml(n) + '</span>';
         }).join('');
         todayEl.innerHTML =
-          '<div class="home-today-label">Tonight</div>' +
+          '<div class="home-today-label">Dinner is sorted</div>' +
           '<div class="home-today-meal">' + escapeHtml(todayMeal.name) + '</div>' +
           sideBadges;
       } else {
         todayEl.innerHTML =
           '<div class="home-today-label">Tonight</div>' +
-          '<div class="home-today-empty">Nothing planned yet.</div>' +
+          '<div class="home-today-empty">Nothing planned yet — no panic.</div>' +
           '<button type="button" class="btn" data-view="planner" style="margin-top:6px;">Plan tonight</button>';
       }
     }
     var progEl = document.getElementById('homeWeekProgress');
+    var week1 = WEEK_DATES[1];
+    var plannedCount = week1.filter(function(d){ return state.meals[d] && state.meals[d].ideaId; }).length;
+    var pct = Math.round((plannedCount / week1.length) * 100);
     if (progEl) {
-      var week1 = WEEK_DATES[1];
-      var plannedCount = week1.filter(function(d){ return state.meals[d] && state.meals[d].ideaId; }).length;
-      var pct = Math.round((plannedCount / week1.length) * 100);
+      var items0 = Object.keys(state.shoppingList || {}).map(function(id){ return state.shoppingList[id]; });
+      var shoppingReady = items0.length > 0;
+      var waitingVotes = week1.filter(function(d){
+        var m = state.meals[d];
+        if (!m || !m.ideaId) return false;
+        var t = tallyOf(m);
+        return (t.yum + t.meh + t.no) === 0;
+      }).length;
+      var summaryBits = [plannedCount + ' of ' + week1.length + ' dinners planned'];
+      summaryBits.push(shoppingReady ? 'shopping list ready' : 'shopping list not started');
+      if (waitingVotes > 0) summaryBits.push(waitingVotes + ' meal' + (waitingVotes === 1 ? '' : 's') + ' waiting for votes');
       progEl.innerHTML =
+        '<div class="sub" style="margin:-6px 0 10px;">' + summaryBits.join(' · ') + '</div>' +
         '<div class="home-progress-row"><span>' + plannedCount + ' of ' + week1.length + ' nights planned</span><span>' + pct + '%</span></div>' +
         '<div class="home-progress-bar"><span style="width:' + pct + '%;"></span></div>';
+    }
+    var heroSub = document.getElementById('homeHeroSub');
+    if (heroSub) {
+      heroSub.textContent = pct >= 100
+        ? "This week's sorted — get ahead and fill in next week too."
+        : 'Fill two weeks in under 30 seconds.';
     }
     var shopEl = document.getElementById('homeShoppingSnapshot');
     if (shopEl) {
       var items = Object.keys(state.shoppingList || {}).map(function(id){ return state.shoppingList[id]; });
       var unchecked = items.filter(function(i){ return i && !i.checked; }).length;
       shopEl.innerHTML = unchecked
-        ? '<div class="home-shopping-row"><span>🛒 ' + unchecked + ' item' + (unchecked === 1 ? '' : 's') + ' left to buy</span><button type="button" class="btn secondary" data-view="shopping">View list</button></div>'
-        : '<div class="home-shopping-row"><span>🛒 Shopping list is all checked off ✅</span><button type="button" class="btn secondary" data-view="shopping">View list</button></div>';
+        ? '<div class="home-shopping-row"><span>' + ffIcon('basket', {size:18, color:'var(--teal)'}) + ' <strong>' + unchecked + '</strong> item' + (unchecked === 1 ? '' : 's') + ' left to grab</span><button type="button" class="btn secondary" data-view="shopping">View list</button></div>'
+        : '<div class="home-shopping-row"><span>' + ffIcon('check', {size:18, color:'var(--teal)'}) + ' Trolley\'s sorted — nothing left to buy</span><button type="button" class="btn secondary" data-view="shopping">View list</button></div>';
+    }
+    // Family Vote highlights — top 3 assigned meals by 😋 vote count, so the
+    // home screen surfaces what everyone's actually excited about.
+    var voteCard = document.getElementById('homeVoteHighlightCard');
+    var voteBody = document.getElementById('homeVoteHighlights');
+    if (voteCard && voteBody) {
+      var ranked = DATES.map(function(d){ return state.meals[d]; })
+        .filter(function(m){ return m && m.ideaId; })
+        .map(function(m){ var t = tallyOf(m); return { name:m.name, yum:t.yum, total:t.yum+t.meh+t.no }; })
+        .filter(function(m){ return m.total > 0; })
+        .sort(function(a,b){ return b.yum - a.yum; })
+        .slice(0, 3);
+      if (ranked.length === 0) {
+        voteCard.style.display = 'none';
+      } else {
+        voteCard.style.display = '';
+        voteBody.innerHTML = ranked.map(function(m, i){
+          var starCount = Math.max(1, Math.min(5, m.yum || 1));
+          var stars = '';
+          for (var s = 0; s < starCount; s++) stars += ffIcon('star', {size:15});
+          return '<div class="home-vote-row">' +
+            '<span class="home-vote-rank">#' + (i+1) + '</span>' +
+            '<span class="home-vote-name">' + escapeHtml(m.name) + '</span>' +
+            '<span class="home-vote-stars">' + stars + '</span>' +
+          '</div>';
+        }).join('');
+      }
     }
   }
   // ---------- Render: Dashboard ----------
@@ -2702,7 +2900,7 @@
         '<div class="vote-tally">😋 '+tally.yum+' · 😐 '+tally.meh+' · 🤢 '+tally.no+' · ('+total+'/'+memberCount+' voted)</div>' +
       '</div>';
     }).join('');
-    el.innerHTML = html || '<div class="empty-hint">Assign some meals in the Planner first.</div>';
+    el.innerHTML = html || emptyState('fire', 'Nothing to vote on yet — assign some meals in the Planner first.', 'var(--orange)');
   }
   // ---------- Render: Household ----------
   function renderHousehold(){
@@ -2710,7 +2908,7 @@
     if(document.activeElement && document.activeElement.id === 'memberName') return;
     var ids = Object.keys(state.members);
     if(ids.length === 0){
-      el.innerHTML = '<div class="empty-hint">No one added yet.</div>';
+      el.innerHTML = emptyState('household', 'No one added yet — add everyone in the house so they can vote.', 'var(--purple)');
       return;
     }
     el.innerHTML = ids.map(function(id){
@@ -2732,7 +2930,7 @@
     if(document.activeElement && document.activeElement.id === 'safeFoodName') return;
     var ids = Object.keys(state.safeFoods);
     if(ids.length === 0){
-      el.innerHTML = '<div class="empty-hint">No safe foods added yet — a couple of go-tos make busy nights much easier.</div>';
+      el.innerHTML = emptyState('bubble', 'No safe foods added yet — a couple of go-tos make busy nights much easier.', 'var(--pink)');
       return;
     }
     el.innerHTML = ids.map(function(id){
@@ -2950,32 +3148,36 @@
   // Native side stashes a shared link in a spot the SharedContent plugin can
   // read; we register the JS-side plugin proxy ourselves since this is a
   // purely-native custom plugin with no npm package of its own.
-  var SharedContentPlugin = (window.Capacitor && window.Capacitor.registerPlugin)
-    ? window.Capacitor.registerPlugin('SharedContent')
-    : null;
   function checkForSharedContent(){
-    var plugin = SharedContentPlugin;
+    var plugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SharedContent;
+    console.log('🍽️ checkForSharedContent: plugin found =', !!plugin);
     if(!plugin) return;
     plugin.getSharedURL().then(function(result){
+      console.log('🍽️ checkForSharedContent: result =', JSON.stringify(result));
       var url = result && result.url;
       if(!url) return;
       switchView('vote');
       resetIdeaForm();
       setIdeaDetailsOpen(true);
       var row = document.querySelector('#ideaLinksRows .idea-link-row');
+      console.log('🍽️ checkForSharedContent: link row found =', !!row);
       if(row){
         var noteInput = row.querySelector('.ideaLinkNote');
         noteInput.value = url;
         tryFetchLinkPreview(row, 'ideaLinksRows');
       }
       plugin.clearSharedURL();
-    }).catch(function(){ /* nothing pending, or plugin unavailable — quietly ignore */ });
+      console.log('🍽️ checkForSharedContent: done, url applied =', url);
+    }).catch(function(err){ console.log('🍽️ checkForSharedContent: error', err); });
   }
   checkForSharedContent();
-setTimeout(checkForSharedContent, 500);
-setTimeout(checkForSharedContent, 1500);
-(function(){
-  var appPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+  // The native bridge can take a beat to finish wiring up right after
+  // launch — a fast first check plus one delayed retry covers that gap
+  // without needing to guess a "safe enough" single delay.
+  setTimeout(checkForSharedContent, 500);
+  setTimeout(checkForSharedContent, 1500);
+  (function(){
+    var appPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
     if(appPlugin && appPlugin.addListener){
       appPlugin.addListener('appUrlOpen', function(){ checkForSharedContent(); });
     }
