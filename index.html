@@ -202,7 +202,8 @@
   .card.tint-sides{ background:var(--tint-sides); }
   /* Small rounded flat icon used inline before headings / labels / empty states */
   .ff-icon{ display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .ff-icon svg{ display:block; }
+  .ff-icon{ line-height:0; }
+  .ff-icon svg{ display:block; width:100%; height:100%; }
   .empty-illo{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; padding:22px 12px; }
   .empty-illo .ff-icon{ width:56px; height:56px; }
   .empty-illo h3{ margin:0; font-size:1.02rem; }
@@ -337,9 +338,9 @@
   .idea-photo-card-badges{ position:absolute; top:6px; left:6px; }
   .idea-photo-card-badges .cat-badge{ box-shadow:0 2px 6px rgba(0,0,0,0.2); }
   .idea-photo-card-link-badge{
-    position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:50%;
-    background:rgba(255,255,255,0.92); display:flex; align-items:center; justify-content:center;
-    box-shadow:0 2px 6px rgba(0,0,0,0.2);
+    position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:50%;
+    background:var(--purple); display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.35); border:2px solid #fff;
   }
   .idea-photo-card-link-badge .ff-icon{ width:13px; height:13px; }
   .idea-photo-card-name{
@@ -969,7 +970,17 @@
     sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.3" fill="currentColor"/><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></g></svg>',
     basket: '<svg viewBox="0 0 24 24"><path d="M7 9.5V7a5 5 0 0 1 10 0v2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><rect x="4" y="9.5" width="16" height="11" rx="4" fill="currentColor"/><circle cx="9.3" cy="15" r="1.1" fill="#fff"/><circle cx="14.7" cy="15" r="1.1" fill="#fff"/></svg>',
     bubble: '<svg viewBox="0 0 24 24"><path d="M4 5h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 4v-4H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" fill="currentColor"/></svg>',
-    link: '<svg viewBox="0 0 24 24"><path d="M8.5 15.5l7-7M8 16.5l-2 2a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5-.3M16 7.5l2-2a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 .3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
+    link: '<svg viewBox="0 0 24 24"><path d="M8.5 15.5l7-7M8 16.5l-2 2a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5-.3M16 7.5l2-2a3.5 3.5 0 0 1 5 5l-3 3a3.5 3.5 0 0 1-5 .3" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
+    // Protein-type icons — used on meal placeholder tiles instead of emoji
+    drumstick: '<svg viewBox="0 0 24 24"><g transform="rotate(45 12 12)"><rect x="10.3" y="1.5" width="3.4" height="10" rx="1.7" fill="currentColor"/><circle cx="12" cy="15.5" r="6" fill="currentColor"/></g></svg>',
+    steak: '<svg viewBox="0 0 24 24"><path d="M4 9c0-3.3 3.3-6 8-6 5 0 8 3 8 7 0 5.2-4 9.5-9.3 9.5-4 0-6.7-2.2-6.7-6 0-1.1.3-2.1 1-3-.6-.3-1-.9-1-1.5z" fill="currentColor"/><circle cx="10" cy="10" r="1.3" fill="#fff" opacity=".55"/><circle cx="14.2" cy="13" r="1.1" fill="#fff" opacity=".55"/></svg>',
+    pig: '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" fill="currentColor"/><path d="M6.5 7.5l2 3M17.5 7.5l-2 3" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/><rect x="8.7" y="13.5" width="6.6" height="4.4" rx="2.2" fill="#fff" opacity=".75"/><circle cx="10.3" cy="15.7" r=".8" fill="currentColor"/><circle cx="13.7" cy="15.7" r=".8" fill="currentColor"/></svg>',
+    fish: '<svg viewBox="0 0 24 24"><path d="M2 12c4.5-5.2 12.5-6.2 16.5-2.8l3.5-2.4-1 5.2 1 5.2-3.5-2.4C14.5 18.2 6.5 17.2 2 12z" fill="currentColor"/><circle cx="7.3" cy="10.8" r="1.1" fill="#fff"/></svg>',
+    egg: '<svg viewBox="0 0 24 24"><path d="M12 2.5C7.8 2.5 5 10 5 15.3a7 7 0 0 0 14 0C19 10 16.2 2.5 12 2.5z" fill="currentColor"/><ellipse cx="9.3" cy="10.8" rx="1.6" ry="2.2" fill="#fff" opacity=".5"/></svg>',
+    sparkle: '<svg viewBox="0 0 24 24"><path d="M12 2l1.7 5.6L19 9.4l-5.3 1.8L12 17l-1.7-5.8L5 9.4l5.3-1.8L12 2z" fill="currentColor"/><path d="M19 13.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z" fill="currentColor"/></svg>',
+    bolt: '<svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 10-13h-6l1-7z" fill="currentColor"/></svg>',
+    pan: '<svg viewBox="0 0 24 24"><circle cx="11" cy="12" r="7.5" fill="currentColor"/><rect x="17.5" y="10.6" width="6.2" height="2.8" rx="1.4" fill="currentColor"/></svg>',
+    wrench: '<svg viewBox="0 0 24 24"><path d="M21.3 8.2a4.7 4.7 0 0 1-6.1 4.5L9 19a2.1 2.1 0 1 1-3-3l6.3-6.2a4.7 4.7 0 0 1 5.6-6.3l-3.2 3.2 1.4 1.4 3.2-3.2c.5.7.9 1.6 1 2.3z" fill="currentColor"/></svg>'
   };
   function ffIcon(name, opts){
     opts = opts || {};
@@ -1042,8 +1053,8 @@
     {key:'no', emoji:'🤢'}
   ];
   var IDEA_CATEGORIES = {
-    'new':  {emoji:'🎉', label:'Something new'},
-    'safe': {emoji:'😌', label:'Old faithful'}
+    'new':  {emoji:'🎉', label:'Something new', icon:'sparkle'},
+    'safe': {emoji:'😌', label:'Old faithful', icon:'heart'}
   };
   function categoryOf(idea){
     return (idea && idea.category === 'safe') ? 'safe' : 'new';
@@ -1051,7 +1062,7 @@
   function categoryBadge(idea){
     var c = categoryOf(idea);
     var meta = IDEA_CATEGORIES[c];
-    return '<span class="cat-badge '+c+'">'+meta.emoji+' '+meta.label+'</span>';
+    return '<span class="cat-badge '+c+'">'+ffIcon(meta.icon, {size:12})+' '+meta.label+'</span>';
   }
   var ideaFilter = 'all'; // 'all' | 'new' | 'safe'
   var ideaViewMode = 'list'; // 'list' | 'protein' — flat scannable list, or grouped into protein sections
@@ -1084,20 +1095,22 @@
     }
     return sorted;
   }
+  // `emoji` is kept only for native <select><option> lists, which can't
+  // render HTML/SVG — every other on-screen use goes through `icon` (ffIcon).
   var PROTEIN_TYPES = {
-    chicken: {emoji:'🍗', label:'Chicken'},
-    beef: {emoji:'🐄', label:'Beef'},
-    pork: {emoji:'🐖', label:'Pork'},
-    fish: {emoji:'🐟', label:'Fish & seafood'},
-    veggie: {emoji:'🥦', label:'Veggie / vegan'},
-    egg: {emoji:'🥚', label:'Egg'},
-    carb: {emoji:'🍝', label:'Pasta / carb-based'},
-    other: {emoji:'🍽️', label:'Other'}
+    chicken: {emoji:'🍗', label:'Chicken', icon:'drumstick'},
+    beef: {emoji:'🐄', label:'Beef', icon:'steak'},
+    pork: {emoji:'🐖', label:'Pork', icon:'pig'},
+    fish: {emoji:'🐟', label:'Fish & seafood', icon:'fish'},
+    veggie: {emoji:'🥦', label:'Veggie / vegan', icon:'broccoli'},
+    egg: {emoji:'🥚', label:'Egg', icon:'egg'},
+    carb: {emoji:'🍝', label:'Pasta / carb-based', icon:'pasta'},
+    other: {emoji:'🍽️', label:'Other', icon:'pot'}
   };
   var EFFORT_LEVELS = {
-    quick: {emoji:'⚡', label:'Quick'},
-    medium: {emoji:'🍳', label:'Medium effort'},
-    project: {emoji:'🛠️', label:'Weekend project'}
+    quick: {emoji:'⚡', label:'Quick', icon:'bolt'},
+    medium: {emoji:'🍳', label:'Medium effort', icon:'pan'},
+    project: {emoji:'🛠️', label:'Weekend project', icon:'wrench'}
   };
   // Best-effort keyword guesser so people don't have to hand-pick the protein
   // every single time — e.g. typing "Salmon leek bake" should land on
@@ -1161,7 +1174,8 @@
   function effortOf(idea){ return tagOf(EFFORT_LEVELS, idea && idea.effort, 'medium'); }
   function tagPill(taxonomy, key){
     var meta = taxonomy[key];
-    return '<span class="tag-pill">'+meta.emoji+' '+meta.label+'</span>';
+    var iconBit = meta.icon ? ffIcon(meta.icon, {size:13})+' ' : (meta.emoji ? meta.emoji+' ' : '');
+    return '<span class="tag-pill">'+iconBit+meta.label+'</span>';
   }
   var ideaSearchText = '';
   var proteinFilter = '';
@@ -2076,10 +2090,11 @@
   // voting here — voting happens once something's actually on the Planner.
   function ideaPhotoOrPlaceholderHtml(idea, extraClass){
     var cat = categoryOf(idea);
-    var proteinEmoji = PROTEIN_TYPES[proteinOf(idea)].emoji;
+    var proteinIcon = PROTEIN_TYPES[proteinOf(idea)].icon;
+    var iconSize = extraClass === 'idea-detail-img' ? 52 : 38;
     return idea.image
       ? '<div class="'+extraClass+'" style="background-image:url('+escapeHtml(idea.image)+')"></div>'
-      : '<div class="'+extraClass+' idea-photo-card-placeholder '+cat+'"><span>'+proteinEmoji+'</span></div>';
+      : '<div class="'+extraClass+' idea-photo-card-placeholder '+cat+'">'+ffIcon(proteinIcon, {size:iconSize, color:'#fff'})+'</div>';
   }
   // Shows a small link icon on any card that has a saved recipe link, so
   // it's obvious at a glance which favourites you can tap through to.
@@ -2089,7 +2104,7 @@
   function ideaCardHtml(id){
     var idea = state.ideas[id];
     var linkBadge = ideaHasLink(idea)
-      ? '<div class="idea-photo-card-link-badge" title="Has a saved link">' + ffIcon('link', {size:13, color:'var(--purple)'}) + '</div>'
+      ? '<div class="idea-photo-card-link-badge" title="Has a saved link">' + ffIcon('link', {size:13, color:'#fff'}) + '</div>'
       : '';
     return '<div class="idea-photo-card" data-open-idea="'+id+'">' +
       ideaPhotoOrPlaceholderHtml(idea, 'idea-photo-card-img') +
